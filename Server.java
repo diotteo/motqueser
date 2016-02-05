@@ -11,6 +11,7 @@ enum NetConMode {
 class Server {
 	private static final Class THIS_CLASS = Server.class;
 	public static final String PRGM = THIS_CLASS.getSimpleName();
+	private static final String VERSION = "0.1";
 
 	private static int port = 0;
 	private static NetConMode mode = NetConMode.SERVER;
@@ -25,6 +26,8 @@ class Server {
 				+ "\n      port to listen on (in client mode, port to connect to). If not specified, default to automatically allocated (random port)"
 				+ "\n  -c|--client <message>:"
 				+ "\n      client mode. Message to send to the server. The client must be run on the same machine as the server."
+				+ "\n  -V|--version:"
+				+ "\n      Print version string and exit."
 		);
 	}
 
@@ -40,9 +43,10 @@ class Server {
 				new LongOpt("help",     LongOpt.NO_ARGUMENT,       null, 'h'),
 				new LongOpt("port",     LongOpt.REQUIRED_ARGUMENT, null, 'p'),
 				new LongOpt("client",   LongOpt.REQUIRED_ARGUMENT, null, 'c'),
+				new LongOpt("version",  LongOpt.REQUIRED_ARGUMENT, null, 'V'),
 		};
 
-		Getopt g = new Getopt(PRGM, args, "c:p:h", longopts);
+		Getopt g = new Getopt(PRGM, args, "c:p:hV", longopts);
 
 		if (args.length < 1) {
 			printHelp(1);
@@ -70,6 +74,10 @@ class Server {
 			case 'c':
 				message = g.getOptarg();
 				mode = NetConMode.CLIENT;
+				break;
+			case 'V':
+				System.out.println(PRGM + " version " + VERSION);
+				System.exit(0);
 				break;
 			case ':':
 				System.err.println((char)g.getOptopt() + ": argument required\n");
