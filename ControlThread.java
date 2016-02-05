@@ -1,13 +1,16 @@
 import java.net.*;
 import java.io.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
-class ServerThread extends Thread {
-	private static final Class THIS_CLASS = ServerThread.class;
+class ControlThread extends Thread {
+	private static final Class THIS_CLASS = ControlThread.class;
 
 	private Socket sock;
+	private ConcurrentLinkedQueue<String> msgQueue;
 
-	public ServerThread(Socket sock) {
+	public ControlThread(Socket sock, ConcurrentLinkedQueue<String> msgQueue) {
 		this.sock = sock;
+		this.msgQueue = msgQueue;
 	}
 
 	public void run() {
@@ -19,12 +22,7 @@ class ServerThread extends Thread {
 			while (!sock.isInputShutdown() && in.ready()) {
 				inputLine = in.readLine();
 				assert inputLine != null : "inputLine is null";
-				out.println(inputLine);
-
-				if (inputLine.equals("close")) {
-					System.out.println("Close command received");
-					break;
-				}
+				msgQueue.add(inputLine);
 			}
 			System.out.println("Closing thread");
 			sock.close();
