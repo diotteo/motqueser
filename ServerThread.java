@@ -16,14 +16,29 @@ class ServerThread extends Thread {
 			BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
 		) {
 			String inputLine;
-			while (!sock.isInputShutdown() && in.ready()) {
-				inputLine = in.readLine();
-				assert inputLine != null : "inputLine is null";
+			while ((inputLine = in.readLine()) != null) {
 				out.println(inputLine);
 
 				if (inputLine.equals("close")) {
 					System.out.println("Close command received");
 					break;
+				} else {
+					long ts = -1;
+					try {
+						ts = new Long(inputLine);
+					} catch (NumberFormatException e) {
+						System.out.println("Wrong ts: " + inputLine);
+					}
+
+					MessageProvider.MessageBundle mb = MessageProvider.getMessages(ts);
+					if (mb == null) {
+						out.println("No messages!");
+					} else {
+						for (String s: mb.getMessages()) {
+							out.println(s);
+						}
+						out.println("ts:" + mb.getTimestamp());
+					}
 				}
 			}
 			System.out.println("Closing thread");

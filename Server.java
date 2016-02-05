@@ -1,7 +1,6 @@
 import gnu.getopt.*;
 import java.net.*;
 import java.io.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 enum NetConMode {
 	SERVER,
@@ -16,7 +15,6 @@ class Server {
 	private static int port = 0;
 	private static NetConMode mode = NetConMode.SERVER;
 	private static String message;
-	private static ConcurrentLinkedQueue<String> msgQueue = new ConcurrentLinkedQueue<String>();
 
 
 	public static void printHelp() {
@@ -97,10 +95,7 @@ class Server {
 	}
 
 
-	public static void main(String args[]) {
-		parseArgs(args);
-
-		if (mode == NetConMode.CLIENT) {
+	private static void executeAsClient() {
 			try {
 				Socket sock = new Socket(InetAddress.getByName("127.0.0.1"), port);
 				PrintWriter out = new PrintWriter(sock.getOutputStream(), true);
@@ -108,7 +103,6 @@ class Server {
 
 				out.close();
 				sock.close();
-				System.exit(0);
 			} catch (UnknownHostException e) {
 				System.err.println("You don't have a loopback interface. Fix your system.");
 				System.exit(1);
@@ -116,13 +110,15 @@ class Server {
 				System.err.println("Error in socket communication: " + e.getMessage());
 				System.exit(1);
 			}
-		}
+	}
 
+
+	public static void executeAsServer() {
 		try {
 			ServerSocket servSock = new ServerSocket(port);
 			System.out.println("Starting " + PRGM + " listening on port " + servSock.getLocalPort());
 
-			DisplayThread dt = new DisplayThread(msgQueue);
+			DisplayThread dt = new DisplayThread();
 			dt.start();
 
 			while (true) {
@@ -130,22 +126,28 @@ class Server {
 
 				if (sock.getInetAddress().getHostAddress().equals("127.0.0.1")) {
 					System.out.println("control connection detected");
-					ControlThread ct = new ControlThread(sock, msgQueue);
+					ControlThread ct = new ControlThread(sock);
 					ct.start();
 				} else {
 					System.out.println("Starting new thread...");
 					ServerThread st = new ServerThread(sock);
 					st.start();
 				}
-
-				String msg = msgQueue.poll();
-				if (msg != null) {
-					System.out.println("Message: " + msg);
-				}
 			}
 		} catch (IOException e) {
 			System.err.println("Exception listening on port " + port + "\n" + e.getMessage());
 			System.exit(1);
+		}
+	}
+
+
+	public static void main(String args[]) {
+		parseArgs(args);
+
+		if (mode == NetConMode.CLIENT) {
+			executeAsClient();
+		} else {
+			executeAsServer();
 		}
 	}
 }
