@@ -16,9 +16,7 @@ class ControlThread extends Thread {
 			BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
 		) {
 			String inputLine;
-			while (!sock.isInputShutdown() && in.ready()) {
-				inputLine = in.readLine();
-				assert inputLine != null : "inputLine is null";
+			while ((inputLine = in.readLine()) != null) {
 				MessageProvider.addMessage(inputLine);
 			}
 			System.out.println("Closing thread");

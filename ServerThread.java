@@ -17,7 +17,7 @@ class ServerThread extends Thread {
 		) {
 			String inputLine;
 			while ((inputLine = in.readLine()) != null) {
-				out.println(inputLine);
+				//System.out.println(inputLine);
 
 				if (inputLine.equals("close")) {
 					System.out.println("Close command received");
@@ -39,6 +39,7 @@ class ServerThread extends Thread {
 						}
 						out.println("ts:" + mb.getTimestamp());
 					}
+					break;
 				}
 			}
 			System.out.println("Closing thread");
