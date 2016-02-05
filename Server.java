@@ -48,10 +48,6 @@ class Server {
 
 		Getopt g = new Getopt(PRGM, args, "c:p:hV", longopts);
 
-		if (args.length < 1) {
-			printHelp(1);
-		}
-
 		int o;
 		while ((o = g.getopt()) != -1) {
 			char c = (char)o;
@@ -124,6 +120,7 @@ class Server {
 
 		try {
 			ServerSocket servSock = new ServerSocket(port);
+			System.out.println("Starting " + PRGM + " listening on port " + servSock.getLocalPort());
 
 			DisplayThread dt = new DisplayThread(msgQueue);
 			dt.start();
