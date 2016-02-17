@@ -20,15 +20,15 @@ run:
 
 
 .PHONY: all
-all: $(objects) $(libs)
+all: $(objects)
 
 
-$(objects): $(BPATH)/%.class: src/%.java $(BUILD_DIR)
+$(objects): $(BPATH)/%.class: src/%.java $(libs) $(BUILD_DIR)
 	$(JAVAC) $(JAVAC_ARGS) -cp $(subst $(space),:,$(libs)):$(BUILD_DIR) -d $(BUILD_DIR) $<
 
 
 .PHONY: run
-run: all
+run: $(objects)
 	$(JAVA) -cp $(subst $(space),:,$(libs)):$(BUILD_DIR) $(subst /,.,$(PKG)/$(PRGM)) $(ARGS)
 
 
@@ -49,13 +49,12 @@ libs:
 libjars: libs $(libs)
 
 
-.PHONY: libs/monitor-lib.jar
 libs/monitor-lib.jar: libs
-	@cd ../monitor-lib/ && $(MAKE) jar
+	@$(MAKE) -C ../monitor-lib/ monitor-lib.jar
 
 
 libs/java-getopt.jar: libs
-	@cd ../java-getopt/ && $(MAKE) java-getopt.jar
+	@$(MAKE) -C ../java-getopt/ java-getopt.jar
 
 
 $(BPATH)/MessageProvider.class: $(patsubst %,$(BPATH)/%.class,Message)

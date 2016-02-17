@@ -4,6 +4,8 @@ import gnu.getopt.*;
 import java.net.*;
 import java.io.*;
 
+import ca.dioo.java.MonitorLib.ControlMessage;
+
 enum NetConMode {
 	SERVER,
 	CLIENT,
@@ -99,9 +101,15 @@ class Server {
 
 	private static void executeAsClient() {
 			try {
+				ControlMessage cm = new ControlMessage();
+				ControlMessage.Item it = new ControlMessage.Item(1);
+				ControlMessage.Media m = new ControlMessage.Media(message);
+				it.add(m);
+				cm.add(it);
+
 				Socket sock = new Socket(InetAddress.getByName("127.0.0.1"), port);
 				PrintWriter out = new PrintWriter(sock.getOutputStream(), true);
-				out.println(message);
+				out.println(cm.getXmlString());
 
 				out.close();
 				sock.close();
