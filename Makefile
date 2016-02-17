@@ -38,7 +38,7 @@ $(BUILD_DIR):
 
 .PHONY: clean
 clean:
-	@[ -e $(BUILD_DIR) ] || rm -rv $(BUILD_DIR)
+	@[ ! -e $(BUILD_DIR) ] || rm -rv $(BUILD_DIR)
 
 
 libs:
