@@ -1,3 +1,5 @@
+package ca.dioo.java.SurveillanceServer;
+
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.Date;
 import java.util.GregorianCalendar;

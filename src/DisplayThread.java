@@ -1,3 +1,5 @@
+package ca.dioo.java.SurveillanceServer;
+
 import java.net.*;
 import java.io.*;
 import java.util.Vector;

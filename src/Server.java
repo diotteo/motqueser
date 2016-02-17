@@ -1,3 +1,5 @@
+package ca.dioo.java.SurveillanceServer;
+
 import gnu.getopt.*;
 import java.net.*;
 import java.io.*;

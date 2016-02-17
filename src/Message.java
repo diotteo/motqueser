@@ -1,3 +1,5 @@
+package ca.dioo.java.SurveillanceServer;
+
 import java.util.Date;
 
 class Message {
