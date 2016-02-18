@@ -13,7 +13,7 @@ class MessageQueue {
 	private static ConcurrentLinkedQueue<Message> msgQueue = new ConcurrentLinkedQueue<Message>();
 	private static ReentrantLock lock = new ReentrantLock();
 	private static final int DELAY = -600;
-	
+
 	static class MessageBundle {
 		private long ts;
 		private Vector<String> msgList;
