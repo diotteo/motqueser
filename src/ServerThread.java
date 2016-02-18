@@ -3,6 +3,12 @@ package ca.dioo.java.SurveillanceServer;
 import java.net.*;
 import java.io.*;
 
+import ca.dioo.java.MonitorLib.Utils;
+import ca.dioo.java.MonitorLib.XmlFactory;
+import ca.dioo.java.MonitorLib.MessageFactory;
+import ca.dioo.java.MonitorLib.ClientMessage;
+import ca.dioo.java.MonitorLib.MalformedMessageException;
+
 class ServerThread extends Thread {
 	private static final Class THIS_CLASS = ServerThread.class;
 
@@ -17,31 +23,53 @@ class ServerThread extends Thread {
 			PrintWriter out = new PrintWriter(sock.getOutputStream(), true);
 			BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
 		) {
-			String inputLine;
-			while ((inputLine = in.readLine()) != null) {
-				//System.out.println(inputLine);
+			try {
+				ca.dioo.java.MonitorLib.Message m = MessageFactory.parse(XmlFactory.newXmlParser(in));
 
-				if (inputLine.equals("close")) {
-					System.out.println("Close command received");
-					break;
+				if (!(m instanceof ClientMessage)) {
+					System.out.println("Bogus message, discarding: Message is not a ClientMessage");
 				} else {
-					long ts = -1;
-					try {
-						ts = new Long(inputLine);
-					} catch (NumberFormatException e) {
-						System.out.println("Wrong ts: " + inputLine);
+					ClientMessage cm = (ClientMessage)m;
+					System.out.print("Client Message:");
+					for (ClientMessage.Action a: cm) {
+						System.out.print(" Action: " + a.getActionType());
 					}
+					System.out.print("\n");
 
-					MessageProvider.MessageBundle mb = MessageProvider.getMessages(ts);
-					if (mb == null) {
-						out.println("No messages!");
+					//TODO: build a ServerMessage and send it to the client
+				}
+			} catch (MalformedMessageException e) {
+				System.out.println(Utils.getPrettyStackTrace(e));
+				System.out.println("Bogus message, discarding: " + e.getMessage());
+			}
+
+			if (false) {
+				String inputLine;
+				while ((inputLine = in.readLine()) != null) {
+					//System.out.println(inputLine);
+
+					if (inputLine.equals("close")) {
+						System.out.println("Close command received");
+						break;
 					} else {
-						for (String s: mb.getMessages()) {
-							out.println(s);
+						long ts = -1;
+						try {
+							ts = new Long(inputLine);
+						} catch (NumberFormatException e) {
+							System.out.println("Wrong ts: " + inputLine);
 						}
-						out.println("ts:" + mb.getTimestamp());
+
+						MessageProvider.MessageBundle mb = MessageProvider.getMessages(ts);
+						if (mb == null) {
+							out.println("No messages!");
+						} else {
+							for (String s: mb.getMessages()) {
+								out.println(s);
+							}
+							out.println("ts:" + mb.getTimestamp());
+						}
+						break;
 					}
-					break;
 				}
 			}
 			System.out.println("Closing thread");
