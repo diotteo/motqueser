@@ -14,10 +14,10 @@ class DisplayThread extends Thread {
 	}
 
 	public void run() {
-		MessageProvider.MessageBundle mb;
+		MessageQueue.MessageBundle mb;
 
 		while (true) {
-			while ((mb = MessageProvider.getMessages(ts)) != null) {
+			while ((mb = MessageQueue.getMessages(ts)) != null) {
 				System.out.println("ts = " + ts);
 				ts = mb.getTimestamp();
 				for (String msg: mb.getMessages()) {

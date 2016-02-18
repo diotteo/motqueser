@@ -35,7 +35,7 @@ class ControlThread extends Thread {
 						System.out.print(" Item: " + it.getId());
 						for (ControlMessage.Media med: it) {
 							System.out.print(" Media: " + med.getPath());
-							MessageProvider.addMessage(it.getId() + " " + med.getPath());
+							MessageQueue.addMessage(it.getId() + " " + med.getPath());
 						}
 					}
 					System.out.print("\n");
@@ -48,7 +48,7 @@ class ControlThread extends Thread {
 			if (false) {
 				String inputLine;
 				while ((inputLine = in.readLine()) != null) {
-					MessageProvider.addMessage(inputLine);
+					MessageQueue.addMessage(inputLine);
 				}
 			}
 

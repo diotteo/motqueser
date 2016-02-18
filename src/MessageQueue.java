@@ -9,7 +9,7 @@ import java.util.Vector;
 import java.util.Collection;
 import java.util.Iterator;
 
-class MessageProvider {
+class MessageQueue {
 	private static ConcurrentLinkedQueue<Message> msgQueue = new ConcurrentLinkedQueue<Message>();
 	private static ReentrantLock lock = new ReentrantLock();
 	private static final int DELAY = -600;
@@ -38,7 +38,7 @@ class MessageProvider {
 	/**
 	 * Singleton
 	 */
-	private MessageProvider() {
+	private MessageQueue() {
 	}
 
 

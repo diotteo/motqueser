@@ -59,7 +59,7 @@ class ServerThread extends Thread {
 							System.out.println("Wrong ts: " + inputLine);
 						}
 
-						MessageProvider.MessageBundle mb = MessageProvider.getMessages(ts);
+						MessageQueue.MessageBundle mb = MessageQueue.getMessages(ts);
 						if (mb == null) {
 							out.println("No messages!");
 						} else {

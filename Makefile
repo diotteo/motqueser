@@ -57,8 +57,8 @@ libs/java-getopt.jar: libs
 	@$(MAKE) -C ../java-getopt/ java-getopt.jar
 
 
-$(BPATH)/MessageProvider.class: $(patsubst %,$(BPATH)/%.class,Message)
-$(BPATH)/DisplayThread.class: $(patsubst %,$(BPATH)/%.class,MessageProvider)
-$(BPATH)/ControlThread.class: $(patsubst %,$(BPATH)/%.class,MessageProvider)
+$(BPATH)/MessageQueue.class: $(patsubst %,$(BPATH)/%.class,Message)
+$(BPATH)/DisplayThread.class: $(patsubst %,$(BPATH)/%.class,MessageQueue)
+$(BPATH)/ControlThread.class: $(patsubst %,$(BPATH)/%.class,MessageQueue)
 $(BPATH)/ServerThread.class: $(patsubst %,$(BPATH)/%.class,ControlThread)
 $(BPATH)/Server.class: $(patsubst %,$(BPATH)/%.class,ControlThread ServerThread)
