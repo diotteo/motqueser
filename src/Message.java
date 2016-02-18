@@ -2,13 +2,20 @@ package ca.dioo.java.SurveillanceServer;
 
 import java.util.Date;
 
-class Message {
-	private String msg;
+class Item {
+	private String media;
+	private int id;
 	private long ts;
 
-	public Message(String msg) {
-		this.msg = msg;
+	public Item(String media, int id) {
+		this.media = media;
+		this.id = id;
 		ts = (new Date()).getTime();
+	}
+
+
+	public int getId() {
+		return id;
 	}
 
 
@@ -17,7 +24,7 @@ class Message {
 	}
 
 
-	public String getMessage() {
-		return msg;
+	public String getMedia() {
+		return media;
 	}
 }
