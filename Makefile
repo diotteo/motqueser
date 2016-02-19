@@ -1,5 +1,5 @@
 JAVA ?= java
-JAVA_ARGS ?= -agentlib:jdwp=transport=dt_socket,server=y,suspend=n
+JAVA_ARGS ?= #-agentlib:jdwp=transport=dt_socket,server=y,suspend=n
 JAVAC ?= javac
 JAVAC_ARGS ?= -Xlint:unchecked
 
@@ -61,5 +61,5 @@ libs/java-getopt.jar: libs
 $(BPATH)/ItemQueue.class: $(patsubst %,$(BPATH)/%.class,Item)
 $(BPATH)/DisplayThread.class: $(patsubst %,$(BPATH)/%.class,ItemQueue)
 $(BPATH)/ControlThread.class: $(patsubst %,$(BPATH)/%.class,ItemQueue)
-$(BPATH)/ServerThread.class: $(patsubst %,$(BPATH)/%.class,ControlThread)
-$(BPATH)/Server.class: $(patsubst %,$(BPATH)/%.class,ControlThread ServerThread)
+$(BPATH)/ServerThread.class: $(patsubst %,$(BPATH)/%.class,ControlThread Utils)
+$(BPATH)/Server.class: $(patsubst %,$(BPATH)/%.class,ControlThread ServerThread Utils)

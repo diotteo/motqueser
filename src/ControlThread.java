@@ -8,7 +8,6 @@ import ca.dioo.java.MonitorLib.ControlMessage;
 import ca.dioo.java.MonitorLib.XmlFactory;
 import ca.dioo.java.MonitorLib.MessageFactory;
 import ca.dioo.java.MonitorLib.MalformedMessageException;
-import ca.dioo.java.MonitorLib.Utils;
 
 class ControlThread extends Thread {
 	private static final Class THIS_CLASS = ControlThread.class;
@@ -28,25 +27,31 @@ class ControlThread extends Thread {
 				Message m = MessageFactory.parse(XmlFactory.newXmlParser(in));
 
 				if (!(m instanceof ControlMessage)) {
-					System.out.println("Bogus message, discarding: Message is not a ControlMessage");
+					System.err.println("Bogus message, discarding: Message is not a ControlMessage");
 				} else {
+					StringBuffer sb = new StringBuffer();
 					ControlMessage cm = (ControlMessage)m;
-					System.out.print("Control Message:");
+					sb.append("Control Message:");
 					for (ControlMessage.Item it: cm) {
-						System.out.print(" Item: " + it.getId());
+						sb.append(" Item: " + it.getId());
 						for (ControlMessage.Media med: it) {
-							System.out.print(" Media: " + med.getPath());
+							sb.append(" Media: " + med.getPath());
 							ItemQueue.add(new Item(med.getPath(), it.getId()));
 						}
 					}
-					System.out.print("\n");
+					System.out.println(sb.toString());
+					//FIXME: fine-grained response
+					out.println("success");
 				}
 			} catch (MalformedMessageException e) {
-				System.out.println(Utils.getPrettyStackTrace(e));
-				System.out.println("Bogus message, discarding: " + e.getMessage());
+				System.err.println(ca.dioo.java.MonitorLib.Utils.getPrettyStackTrace(e));
+				System.err.println("Bogus message, discarding: " + e.getMessage());
+			} catch (IllegalArgumentException e) {
+				//FIXME: fine-grained response
+				out.println("failure: " + e.getMessage());
 			}
 
-			System.out.println("Closing thread");
+			Utils.debugPrintln(2, "Closing thread");
 			sock.close();
 		} catch (IOException e) {
 			System.err.println("Exception in thread \n" + e.getMessage());

@@ -61,7 +61,7 @@ class ItemQueue {
 	}
 
 
-	public static boolean add(Item item) {
+	public static boolean add(Item item) throws IllegalArgumentException {
 		boolean ret = false;
 
 		lock.lock();
@@ -70,8 +70,7 @@ class ItemQueue {
 				//FIXME: Error
 				throw new Error("id too small: " + item.getId() + " < " + minId);
 			} else if (ht.containsKey(item.getId())) {
-//FIXME: Throw Exception?
-System.out.println("\nid:" + item.getId() + " not added ret=" + ret);
+				throw new IllegalArgumentException("id " + item.getId() + " already exists");
 			} else {
 				ItemWrapper iw = new ItemWrapper(item);
 				ret = itemQueue.add(iw);

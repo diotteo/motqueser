@@ -35,6 +35,8 @@ class Server {
 				+ "\n      client mode. Message to send to the server. The client must be run on the same machine as the server."
 				+ "\n  -V|--version:"
 				+ "\n      Print version string and exit."
+				+ "\n  -d|--debug [lvl]:"
+				+ "\n      enable debugging. lvl is an integer, defaults to 1"
 		);
 	}
 
@@ -51,9 +53,10 @@ class Server {
 				new LongOpt("port",     LongOpt.REQUIRED_ARGUMENT, null, 'p'),
 				new LongOpt("client",   LongOpt.REQUIRED_ARGUMENT, null, 'c'),
 				new LongOpt("version",  LongOpt.REQUIRED_ARGUMENT, null, 'V'),
+				new LongOpt("debug",    LongOpt.OPTIONAL_ARGUMENT, null, 'd'),
 		};
 
-		Getopt g = new Getopt(PRGM, args, "c:p:hV", longopts);
+		Getopt g = new Getopt(PRGM, args, "c:p:hVd::", longopts);
 
 		int o;
 		while ((o = g.getopt()) != -1) {
@@ -82,6 +85,18 @@ class Server {
 				System.out.println(PRGM + " version " + VERSION);
 				System.exit(0);
 				break;
+			case 'd':
+				Utils.dbgLvl = 1;
+				try {
+					String arg = g.getOptarg();
+					if (arg != null) {
+						Utils.dbgLvl = new Integer(arg);
+					}
+				} catch (NumberFormatException e) {
+					System.err.println((char)g.getOptopt() + ": invalid argument: must be an integer\n");
+					printHelp(1);
+				}
+				break;
 			case ':':
 				System.err.println((char)g.getOptopt() + ": argument required\n");
 				printHelp(1);
@@ -108,7 +123,8 @@ class Server {
 		String fn = null;
 		Path mediaDir = null;
 		try {
-			mediaDir = FileSystems.getDefault().getPath("/path/to/media/dir");
+			String dirStr = (new BufferedReader(new FileReader("dir.conf"))).readLine();
+			mediaDir = FileSystems.getDefault().getPath(dirStr);
 			DirectoryStream<Path> ds = Files.newDirectoryStream(mediaDir, message + "-*.avi");
 
 			boolean b_first = true;
@@ -142,8 +158,16 @@ class Server {
 
 			Socket sock = new Socket(InetAddress.getByName("127.0.0.1"), port);
 			PrintWriter out = new PrintWriter(sock.getOutputStream(), true);
+			BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
 			out.println(cm.getXmlString());
 
+			String result = in.readLine();
+			if (!result.equals("success")) {
+				System.err.println(result);
+				System.exit(2);
+			}
+
+			in.close();
 			out.close();
 			sock.close();
 		} catch (UnknownHostException e) {
@@ -172,7 +196,7 @@ class Server {
 					ControlThread ct = new ControlThread(sock);
 					ct.start();
 				} else {
-					System.out.println("Starting new thread...");
+					Utils.debugPrintln(2, "Starting new thread...");
 					ServerThread st = new ServerThread(sock);
 					st.start();
 				}

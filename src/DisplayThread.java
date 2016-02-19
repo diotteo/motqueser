@@ -18,9 +18,7 @@ class DisplayThread extends Thread {
 
 		EXIT: while (true) {
 			while ((ib = ItemQueue.getItems(lastId)) != null) {
-				System.out.println("last id = " + lastId);
 				lastId = ib.getLastId();
-System.out.println("new last id = " + lastId);
 				for (Item it: ib) {
 					System.out.println("Item: " + it);
 				}
