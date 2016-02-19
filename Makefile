@@ -1,4 +1,5 @@
 JAVA ?= java
+JAVA_ARGS ?= -agentlib:jdwp=transport=dt_socket,server=y,suspend=n
 JAVAC ?= javac
 JAVAC_ARGS ?= -Xlint:unchecked
 
@@ -29,7 +30,7 @@ $(objects): $(BPATH)/%.class: src/%.java $(libs) $(BUILD_DIR)
 
 .PHONY: run
 run: $(objects)
-	$(JAVA) -cp $(subst $(space),:,$(libs)):$(BUILD_DIR) $(subst /,.,$(PKG)/$(PRGM)) $(ARGS)
+	$(JAVA) $(JAVA_ARGS) -cp $(subst $(space),:,$(libs)):$(BUILD_DIR) $(subst /,.,$(PKG)/$(PRGM)) $(ARGS)
 
 
 $(BUILD_DIR):

@@ -6,6 +6,7 @@ import java.io.*;
 import ca.dioo.java.MonitorLib.Utils;
 import ca.dioo.java.MonitorLib.XmlFactory;
 import ca.dioo.java.MonitorLib.MessageFactory;
+import ca.dioo.java.MonitorLib.Message;
 import ca.dioo.java.MonitorLib.ClientMessage;
 import ca.dioo.java.MonitorLib.ServerMessage;
 import ca.dioo.java.MonitorLib.MalformedMessageException;
@@ -25,7 +26,7 @@ class ServerThread extends Thread {
 			BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
 		) {
 			try {
-				ca.dioo.java.MonitorLib.Message m = MessageFactory.parse(XmlFactory.newXmlParser(in));
+				Message m = MessageFactory.parse(XmlFactory.newXmlParser(in));
 
 				if (!(m instanceof ClientMessage)) {
 					System.out.println("Bogus message, discarding: Message is not a ClientMessage");
@@ -40,16 +41,17 @@ class ServerThread extends Thread {
 					if (sub instanceof ServerMessage.ItemList) {
 						ServerMessage.ItemList il = (ServerMessage.ItemList)sub;
 
-						MessageQueue.MessageBundle mb = MessageQueue.getMessages(il.getPrevId());
-						if (mb == null) {
-							out.println("No messages!");
+						ItemQueue.ItemBundle ib = ItemQueue.getItems(il.getPrevId());
+						if (ib == null) {
+							//out.println("No messages!");
 						} else {
-							for (String s: mb.getMessages()) {
-								out.println("message: " + s);
-								//il.add(new ServerMessage.Item());
+							for (Item it: ib) {
+								//out.println("message: " + it);
+								il.add(new ServerMessage.Item(it.getId()));
 							}
-							out.println("ts:" + mb.getTimestamp());
+							//out.println("last_id:" + ib.getLastId());
 						}
+						out.println(sm.getXmlString());
 					} else {
 						System.out.println("Unimplement response: " + sub.getClass().getName());
 					}
@@ -60,35 +62,6 @@ class ServerThread extends Thread {
 				System.out.println("Bogus message, discarding: " + e.getMessage());
 			}
 
-			if (false) {
-				String inputLine;
-				while ((inputLine = in.readLine()) != null) {
-					//System.out.println(inputLine);
-
-					if (inputLine.equals("close")) {
-						System.out.println("Close command received");
-						break;
-					} else {
-						long ts = -1;
-						try {
-							ts = new Long(inputLine);
-						} catch (NumberFormatException e) {
-							System.out.println("Wrong ts: " + inputLine);
-						}
-
-						MessageQueue.MessageBundle mb = MessageQueue.getMessages(ts);
-						if (mb == null) {
-							out.println("No messages!");
-						} else {
-							for (String s: mb.getMessages()) {
-								out.println(s);
-							}
-							out.println("ts:" + mb.getTimestamp());
-						}
-						break;
-					}
-				}
-			}
 			System.out.println("Closing thread");
 			sock.close();
 		} catch (IOException e) {

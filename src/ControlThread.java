@@ -3,6 +3,7 @@ package ca.dioo.java.SurveillanceServer;
 import java.net.*;
 import java.io.*;
 
+import ca.dioo.java.MonitorLib.Message;
 import ca.dioo.java.MonitorLib.ControlMessage;
 import ca.dioo.java.MonitorLib.XmlFactory;
 import ca.dioo.java.MonitorLib.MessageFactory;
@@ -24,7 +25,7 @@ class ControlThread extends Thread {
 			BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
 		) {
 			try {
-				ca.dioo.java.MonitorLib.Message m = MessageFactory.parse(XmlFactory.newXmlParser(in));
+				Message m = MessageFactory.parse(XmlFactory.newXmlParser(in));
 
 				if (!(m instanceof ControlMessage)) {
 					System.out.println("Bogus message, discarding: Message is not a ControlMessage");
@@ -35,7 +36,7 @@ class ControlThread extends Thread {
 						System.out.print(" Item: " + it.getId());
 						for (ControlMessage.Media med: it) {
 							System.out.print(" Media: " + med.getPath());
-							MessageQueue.addMessage(it.getId() + " " + med.getPath());
+							ItemQueue.add(new Item(med.getPath(), it.getId()));
 						}
 					}
 					System.out.print("\n");
@@ -43,13 +44,6 @@ class ControlThread extends Thread {
 			} catch (MalformedMessageException e) {
 				System.out.println(Utils.getPrettyStackTrace(e));
 				System.out.println("Bogus message, discarding: " + e.getMessage());
-			}
-
-			if (false) {
-				String inputLine;
-				while ((inputLine = in.readLine()) != null) {
-					MessageQueue.addMessage(inputLine);
-				}
 			}
 
 			System.out.println("Closing thread");

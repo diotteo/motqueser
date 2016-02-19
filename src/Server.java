@@ -4,6 +4,11 @@ import gnu.getopt.*;
 import java.net.*;
 import java.io.*;
 
+import java.nio.file.Path;
+import java.nio.file.Files;
+import java.nio.file.FileSystems;
+import java.nio.file.DirectoryStream;
+
 import ca.dioo.java.MonitorLib.ControlMessage;
 
 enum NetConMode {
@@ -100,26 +105,54 @@ class Server {
 
 
 	private static void executeAsClient() {
-			try {
-				ControlMessage cm = new ControlMessage();
-				ControlMessage.Item it = new ControlMessage.Item(1);
-				ControlMessage.Media m = new ControlMessage.Media(message);
-				it.add(m);
-				cm.add(it);
+		String fn = null;
+		Path mediaDir = null;
+		try {
+			mediaDir = FileSystems.getDefault().getPath("/path/to/media/dir");
+			DirectoryStream<Path> ds = Files.newDirectoryStream(mediaDir, message + "-*.avi");
 
-				Socket sock = new Socket(InetAddress.getByName("127.0.0.1"), port);
-				PrintWriter out = new PrintWriter(sock.getOutputStream(), true);
-				out.println(cm.getXmlString());
-
-				out.close();
-				sock.close();
-			} catch (UnknownHostException e) {
-				System.err.println("You don't have a loopback interface. Fix your system.");
-				System.exit(1);
-			} catch (IOException e) {
-				System.err.println("Error in socket communication: " + e.getMessage());
-				System.exit(1);
+			boolean b_first = true;
+			for (Path p: ds) {
+				if (fn != null) {
+					System.err.println("More than one file matches filter, aborting.");
+					System.exit(2);
+				}
+				fn = p.getFileName().toString();
+				if (b_first) {
+					b_first = false;
+					System.out.println("matching files:");
+				}
+				System.out.println(fn);
 			}
+		} catch (IOException e) {
+			System.err.println("Error matching file:" + e.getMessage());
+			System.exit(2);
+		}
+		if (fn == null) {
+			System.err.println("No file matching filter in " + mediaDir);
+			System.exit(2);
+		}
+
+		try {
+			ControlMessage cm = new ControlMessage();
+			ControlMessage.Item it = new ControlMessage.Item(new Integer(message));
+			ControlMessage.Media m = new ControlMessage.Media(fn);
+			it.add(m);
+			cm.add(it);
+
+			Socket sock = new Socket(InetAddress.getByName("127.0.0.1"), port);
+			PrintWriter out = new PrintWriter(sock.getOutputStream(), true);
+			out.println(cm.getXmlString());
+
+			out.close();
+			sock.close();
+		} catch (UnknownHostException e) {
+			System.err.println("You don't have a loopback interface. Fix your system.");
+			System.exit(1);
+		} catch (IOException e) {
+			System.err.println("Error in socket communication: " + e.getMessage());
+			System.exit(1);
+		}
 	}
 
 

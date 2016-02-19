@@ -7,27 +7,28 @@ import java.util.Vector;
 class DisplayThread extends Thread {
 	private static final Class THIS_CLASS = DisplayThread.class;
 
-	private long ts;
+	private int lastId;
 
 	public DisplayThread() {
-		ts = -1;
+		lastId = -1;
 	}
 
 	public void run() {
-		MessageQueue.MessageBundle mb;
+		ItemQueue.ItemBundle ib;
 
-		while (true) {
-			while ((mb = MessageQueue.getMessages(ts)) != null) {
-				System.out.println("ts = " + ts);
-				ts = mb.getTimestamp();
-				for (String msg: mb.getMessages()) {
-					System.out.println("Message: " + msg);
+		EXIT: while (true) {
+			while ((ib = ItemQueue.getItems(lastId)) != null) {
+				System.out.println("last id = " + lastId);
+				lastId = ib.getLastId();
+System.out.println("new last id = " + lastId);
+				for (Item it: ib) {
+					System.out.println("Item: " + it);
 				}
 			}
 			try {
 				Thread.sleep(500);
 			} catch (InterruptedException e) {
-				//Exiting
+				break EXIT;
 			}
 		}
 	}
