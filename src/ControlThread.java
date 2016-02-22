@@ -1,7 +1,10 @@
 package ca.dioo.java.SurveillanceServer;
 
-import java.net.*;
-import java.io.*;
+import java.net.Socket;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
 import ca.dioo.java.MonitorLib.Message;
 import ca.dioo.java.MonitorLib.ControlMessage;

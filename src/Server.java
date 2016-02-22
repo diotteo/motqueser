@@ -1,9 +1,15 @@
 package ca.dioo.java.SurveillanceServer;
 
 import gnu.getopt.*;
-import java.net.*;
-import java.io.*;
-
+import java.net.Socket;
+import java.net.ServerSocket;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Files;
 import java.nio.file.FileSystems;
@@ -119,40 +125,25 @@ class Server {
 	}
 
 
+	//FIXME: have the server verify the file from ID (directories could differ for one)
 	private static void executeAsClient() {
-		String fn = null;
-		Path mediaDir = null;
+		Path itemPath = null;
 		try {
-			String dirStr = (new BufferedReader(new FileReader("dir.conf"))).readLine();
-			mediaDir = FileSystems.getDefault().getPath(dirStr);
-			DirectoryStream<Path> ds = Files.newDirectoryStream(mediaDir, message + "-*.avi");
-
-			boolean b_first = true;
-			for (Path p: ds) {
-				if (fn != null) {
-					System.err.println("More than one file matches filter, aborting.");
-					System.exit(2);
-				}
-				fn = p.getFileName().toString();
-				if (b_first) {
-					b_first = false;
-					System.out.println("matching files:");
-				}
-				System.out.println(fn);
-			}
+			itemPath = Utils.getPathFromId(new Integer(message));
 		} catch (IOException e) {
-			System.err.println("Error matching file:" + e.getMessage());
+			System.err.println(e.getMessage());
 			System.exit(2);
 		}
-		if (fn == null) {
-			System.err.println("No file matching filter in " + mediaDir);
+
+		if (itemPath == null) {
+			System.err.println("No file matched filter");
 			System.exit(2);
 		}
 
 		try {
 			ControlMessage cm = new ControlMessage();
 			ControlMessage.Item it = new ControlMessage.Item(new Integer(message));
-			ControlMessage.Media m = new ControlMessage.Media(fn);
+			ControlMessage.Media m = new ControlMessage.Media(itemPath.toString());
 			it.add(m);
 			cm.add(it);
 

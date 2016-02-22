@@ -1,7 +1,5 @@
 package ca.dioo.java.SurveillanceServer;
 
-import java.util.Date;
-
 class Item {
 	private String media;
 	private int id;

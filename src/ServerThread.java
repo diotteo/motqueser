@@ -1,7 +1,16 @@
 package ca.dioo.java.SurveillanceServer;
 
-import java.net.*;
-import java.io.*;
+import java.net.Socket;
+import java.net.ServerSocket;
+import java.nio.file.Path;
+import java.io.File;
+import java.io.IOException;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.PrintWriter;
 
 import ca.dioo.java.MonitorLib.XmlFactory;
 import ca.dioo.java.MonitorLib.MessageFactory;
@@ -21,8 +30,10 @@ class ServerThread extends Thread {
 
 	public void run() {
 		try (
-			PrintWriter out = new PrintWriter(sock.getOutputStream(), true);
-			BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+			BufferedOutputStream bos = new BufferedOutputStream(sock.getOutputStream());
+			PrintWriter out = new PrintWriter(bos, true);
+			BufferedInputStream bis = new BufferedInputStream(sock.getInputStream());
+			BufferedReader in = new BufferedReader(new InputStreamReader(bis));
 		) {
 			try {
 				Message m = MessageFactory.parse(XmlFactory.newXmlParser(in));
@@ -46,6 +57,31 @@ class ServerThread extends Thread {
 							}
 						}
 						out.println(sm.getXmlString());
+					} else if (sub instanceof ServerMessage.Item) {
+						ServerMessage.Item it = (ServerMessage.Item)sub;
+
+						Path mediaPath;
+						try {
+							mediaPath = Utils.getPathFromId(it.getId());
+							if (mediaPath == null) {
+								System.err.println("No file matching filter for id " + it.getId());
+								//FIXME: figure out response format and send it to client
+							} else {
+								File mediaFile = new File(mediaPath.toString());
+								if (mediaFile.length() > Integer.MAX_VALUE) {
+									throw new Error("File " + mediaPath.toString() + " is WAY too large");
+								} else {
+									int fileLen = (int)mediaFile.length();
+									byte[] fileContent = new byte[fileLen];
+									int len = (new FileInputStream(mediaFile)).read(fileContent);
+
+									out.println(sm.getXmlString());
+									bos.write(fileContent, 0, fileContent.length);
+								}
+							}
+						} catch (IOException e) {
+							System.err.println("Error matching ID:" + e.getMessage());
+						}
 					} else {
 						System.err.println("Unimplement response: " + sub.getClass().getName());
 					}
