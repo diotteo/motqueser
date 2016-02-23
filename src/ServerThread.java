@@ -73,10 +73,13 @@ class ServerThread extends Thread {
 								} else {
 									int fileLen = (int)mediaFile.length();
 									byte[] fileContent = new byte[fileLen];
+System.out.println("file \"" + mediaPath.toString() + "\" is " + fileLen + " bytes long");
 									int len = (new FileInputStream(mediaFile)).read(fileContent);
 
 									out.println(sm.getXmlString());
 									bos.write(fileContent, 0, fileContent.length);
+									bos.flush();
+									bos.close();
 								}
 							}
 						} catch (IOException e) {

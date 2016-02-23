@@ -14,6 +14,9 @@ space := $(empty) $(empty)
 src := $(wildcard src/*.java)
 objects := $(patsubst src/%.java,$(BPATH)/%.class,$(src))
 
+test_src := $(wildcard test/*.java)
+test_objects := $(patsubst test/%.java,$(BUILD_DIR)/%.class,$(test_src))
+
 libs = $(wildcard libs/*.jar)
 
 
@@ -31,6 +34,16 @@ $(objects): $(BPATH)/%.class: src/%.java $(libs) $(BUILD_DIR)
 .PHONY: run
 run: $(objects)
 	$(JAVA) $(JAVA_ARGS) -cp $(subst $(space),:,$(libs)):$(BUILD_DIR) $(subst /,.,$(PKG)/$(PRGM)) $(ARGS)
+
+
+.PHONY: test
+test: $(test_objects)
+	$(JAVA) -ea $(JAVA_ARGS) -cp $(subst $(space),:,$(libs)):$(BUILD_DIR) Test
+
+
+$(test_objects): $(BUILD_DIR)/%.class: test/%.java $(libs) $(BUILD_DIR)
+	$(JAVAC) $(JAVAC_ARGS) -cp $(subst $(space),:,$(libs)):$(BUILD_DIR) -d $(BUILD_DIR) $<
+
 
 
 $(BUILD_DIR):
