@@ -24,6 +24,7 @@ import ca.dioo.java.MonitorLib.ClientMessage;
 import ca.dioo.java.MonitorLib.MalformedMessageException;
 import ca.dioo.java.MonitorLib.BadActionTypeException;
 
+import ca.dioo.java.commons.BinaryWithHeaderStream;
 
 public class Test {
 	public static final String HOSTNAME = "Bob";
@@ -33,24 +34,22 @@ public class Test {
 
 	public static void main(String[] args) throws Exception {
 		getEvent(3670);
+		delEvent(333);
 	}
 
 
-	private static void getEvent(int id) {
+	private static void delEvent(int id) {
 		try {
 			Socket sock = new Socket(HOSTNAME, PORT);
 			PrintWriter out = new PrintWriter(sock.getOutputStream(), true);
-			BufferedInputStream bis = new BufferedInputStream(sock.getInputStream());
+			InputStream is = sock.getInputStream();
+			BufferedInputStream bis = new BufferedInputStream(is);
 			InputStreamReader in = new InputStreamReader(bis);
 			ClientMessage cm = new ClientMessage();
-			ClientMessage.Action a = new ClientMessage.Action(ClientMessage.Action.ActionType.GET_MSG);
+			ClientMessage.ItemDeletionRequest req = new ClientMessage.ItemDeletionRequest(id);
 			try {
-				try {
-					a.setId(id);
-				} catch (BadActionTypeException e) {
-					throw new Error("?!?:" + e.getMessage(), e);
-				}
-				cm.add(a);
+				cm.add(req);
+				System.out.println("Client Message:\n" + cm.getXmlString());
 				out.println(cm.getXmlString());
 
 				Message m = MessageFactory.parse(XmlFactory.newXmlParser(in));
@@ -59,45 +58,71 @@ public class Test {
 				} else {
 					ServerMessage sm = (ServerMessage)m;
 					try {
-						ServerMessage.Item it = (ServerMessage.Item)sm.getSubMessage();
+						ServerMessage.ItemDeletionResponse it = (ServerMessage.ItemDeletionResponse)sm.getResponse();
 						if (it == null) {
 							throw new Error("item is null");
 						}
 
-System.out.println("Server Message:\n" + sm.toString() + "\n");
-try {
-Thread.sleep(10000);
-} catch (InterruptedException e) {
-	System.exit(1);
-}
+						System.out.println("Server Message:\n" + sm.toString() + "\n");
+					} catch (ClassCastException e) {
+						System.out.println("Server sent a server_message other than item_list");
+					}
+				}
+			} catch (MalformedMessageException e) {
+				System.out.println("Server sent us bogus message: " + e.getMessage());
+			}
+			sock.close();
 
-						BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream("/tmp/test.avi"));
-						boolean b_done = false;
-						int size = 0;
-						while (!sock.isInputShutdown() && !b_done) {
-if (sock.isInputShutdown()) {
-System.out.println("input down");
-}
-if (sock.isOutputShutdown()) {
-System.out.println("output down");
-}
-							int readRet = 0;
-							do {
-								int len = bis.available();
-								if (len > 0) {
-System.out.println("available = " + len);
-									byte[] data = new byte[len];
-									readRet = bis.read(data, 0, data.length);
+		} catch (UnknownHostException e) {
+			System.err.println("Unknown host \"" + HOSTNAME + "\": " + e.getMessage());
+		} catch (IOException e) {
+			System.err.println("I/O exception: " + e.getMessage());
+		}
+	}
 
-									if (readRet > 0) {
-										output.write(data, 0, readRet);
-										output.flush();
-System.out.println("wrote " + readRet + " bytes to file");
-										size += readRet;
-									}
-								}
-							} while (readRet > 0);
+
+	private static void getEvent(int id) {
+		try {
+			Socket sock = new Socket(HOSTNAME, PORT);
+			PrintWriter out = new PrintWriter(sock.getOutputStream(), true);
+			InputStream is = sock.getInputStream();
+			BinaryWithHeaderStream bins = new BinaryWithHeaderStream(is);
+			BufferedInputStream bis = new BufferedInputStream(bins);
+			InputStreamReader in = new InputStreamReader(bis);
+			ClientMessage cm = new ClientMessage();
+			ClientMessage.ItemRequest req = new ClientMessage.ItemRequest();
+			try {
+				req.setId(id);
+				cm.add(req);
+				System.out.println("Client Message:\n" + cm.getXmlString());
+				out.println(cm.getXmlString());
+
+				Message m = MessageFactory.parse(XmlFactory.newXmlParser(in));
+				if (!(m instanceof ServerMessage)) {
+					System.out.println("Server sent us an unexpected message");
+				} else {
+					ServerMessage sm = (ServerMessage)m;
+					try {
+						ServerMessage.ItemResponse it = (ServerMessage.ItemResponse)sm.getResponse();
+						if (it == null) {
+							throw new Error("item is null");
 						}
+
+						System.out.println("Server Message:\n" + sm.toString() + "\n");
+						BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream("/tmp/test.avi"));
+						int size = 0;
+						int readRet;
+						byte[] data = bins.getBuffer();
+						output.write(data);
+						do {
+							readRet = is.read(data, 0, data.length);
+
+							if (readRet > 0) {
+								output.write(data, 0, readRet);
+								output.flush();
+								size += readRet;
+							}
+						} while (readRet > -1);
 						output.close();
 					} catch (ClassCastException e) {
 						System.out.println("Server sent a server_message other than item_list");
@@ -106,8 +131,6 @@ System.out.println("wrote " + readRet + " bytes to file");
 			} catch (MalformedMessageException e) {
 				System.out.println("Server sent us bogus message: " + e.getMessage());
 			}
-			out.close();
-			in.close();
 			sock.close();
 
 		} catch (UnknownHostException e) {
@@ -124,14 +147,10 @@ System.out.println("wrote " + readRet + " bytes to file");
 			PrintWriter out = new PrintWriter(sock.getOutputStream(), true);
 			BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
 			ClientMessage cm = new ClientMessage();
-			ClientMessage.Action a = new ClientMessage.Action(ClientMessage.Action.ActionType.GET_MSG_LIST);
+			ClientMessage.ItemListRequest req = new ClientMessage.ItemListRequest();
 			try {
-				try {
-					a.setPrevId(prevId);
-				} catch (BadActionTypeException e) {
-					throw new Error("?!?:" + e.getMessage(), e);
-				}
-				cm.add(a);
+				req.setPrevId(prevId);
+				cm.add(req);
 				out.println(cm.getXmlString());
 
 				Message m = MessageFactory.parse(XmlFactory.newXmlParser(in));
@@ -141,9 +160,9 @@ System.out.println("wrote " + readRet + " bytes to file");
 					ServerMessage sm = (ServerMessage)m;
 
 					try {
-						ServerMessage.ItemList il = (ServerMessage.ItemList)sm.getSubMessage();
-						ServerMessage.Item it = null;
-						for (Iterator<ServerMessage.Item> i = il.iterator(); i.hasNext(); ) {
+						ServerMessage.ItemListResponse il = (ServerMessage.ItemListResponse)sm.getResponse();
+						ServerMessage.ItemResponse it = null;
+						for (Iterator<ServerMessage.ItemResponse> i = il.iterator(); i.hasNext(); ) {
 							it = i.next();
 						}
 						if (it != null) {

@@ -12,6 +12,7 @@ import ca.dioo.java.MonitorLib.XmlFactory;
 import ca.dioo.java.MonitorLib.MessageFactory;
 import ca.dioo.java.MonitorLib.MalformedMessageException;
 
+
 class ControlThread extends Thread {
 	private static final Class THIS_CLASS = ControlThread.class;
 
@@ -47,7 +48,7 @@ class ControlThread extends Thread {
 					out.println("success");
 				}
 			} catch (MalformedMessageException e) {
-				System.err.println(ca.dioo.java.MonitorLib.Utils.getPrettyStackTrace(e));
+				System.err.println(ca.dioo.java.commons.Utils.getPrettyStackTrace(e));
 				System.err.println("Bogus message, discarding: " + e.getMessage());
 			} catch (IllegalArgumentException e) {
 				//FIXME: fine-grained response

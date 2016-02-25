@@ -13,11 +13,11 @@ space := $(empty) $(empty)
 
 src := $(wildcard src/*.java)
 objects := $(patsubst src/%.java,$(BPATH)/%.class,$(src))
+libs = $(wildcard libs/*.jar)
 
 test_src := $(wildcard test/*.java)
 test_objects := $(patsubst test/%.java,$(BUILD_DIR)/%.class,$(test_src))
-
-libs = $(wildcard libs/*.jar)
+test_libs := $(wildcard test/libs/*.jar)
 
 
 run:
@@ -28,21 +28,21 @@ all: $(objects)
 
 
 $(objects): $(BPATH)/%.class: src/%.java $(libs) $(BUILD_DIR)
-	$(JAVAC) $(JAVAC_ARGS) -cp $(subst $(space),:,$(libs)):$(BUILD_DIR) -d $(BUILD_DIR) $<
+	$(JAVAC) $(JAVAC_ARGS) -cp libs/*:$(BUILD_DIR) -d $(BUILD_DIR) $<
 
 
 .PHONY: run
 run: $(objects)
-	$(JAVA) $(JAVA_ARGS) -cp $(subst $(space),:,$(libs)):$(BUILD_DIR) $(subst /,.,$(PKG)/$(PRGM)) $(ARGS)
+	$(JAVA) $(JAVA_ARGS) -cp libs/*:$(BUILD_DIR) $(subst /,.,$(PKG)/$(PRGM)) $(ARGS)
 
 
 .PHONY: test
 test: $(test_objects)
-	$(JAVA) -ea $(JAVA_ARGS) -cp $(subst $(space),:,$(libs)):$(BUILD_DIR) Test
+	$(JAVA) -ea $(JAVA_ARGS) -cp libs/*:test/libs/*:$(BUILD_DIR) Test
 
 
 $(test_objects): $(BUILD_DIR)/%.class: test/%.java $(libs) $(BUILD_DIR)
-	$(JAVAC) $(JAVAC_ARGS) -cp $(subst $(space),:,$(libs)):$(BUILD_DIR) -d $(BUILD_DIR) $<
+	$(JAVAC) $(JAVAC_ARGS) -cp libs/*:$(BUILD_DIR) -d $(BUILD_DIR) $<
 
 
 
@@ -63,12 +63,8 @@ libs:
 libjars: libs $(libs)
 
 
-libs/monitor-lib.jar: libs
-	@$(MAKE) -C ../monitor-lib/ monitor-lib.jar
-
-
-libs/java-getopt.jar: libs
-	@$(MAKE) -C ../java-getopt/ java-getopt.jar
+$(libs) $(test_libs):
+	$(MAKE) -C $(dir $(shell readlink $@)) jar
 
 
 $(BPATH)/ItemQueue.class: $(patsubst %,$(BPATH)/%.class,Item)

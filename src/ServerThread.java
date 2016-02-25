@@ -46,19 +46,19 @@ class ServerThread extends Thread {
 
 					ServerMessage sm = new ServerMessage(cm.getVersion());
 					sm.buildAsResponse(cm);
-					ServerMessage.SubMessage sub = sm.getSubMessage();
-					if (sub instanceof ServerMessage.ItemList) {
-						ServerMessage.ItemList il = (ServerMessage.ItemList)sub;
+					ServerMessage.Response resp = sm.getResponse();
+					if (resp instanceof ServerMessage.ItemListResponse) {
+						ServerMessage.ItemListResponse il = (ServerMessage.ItemListResponse)resp;
 
 						ItemQueue.ItemBundle ib = ItemQueue.getItems(il.getPrevId());
 						if (ib != null) {
 							for (Item it: ib) {
-								il.add(new ServerMessage.Item(it.getId()));
+								il.add(new ServerMessage.ItemResponse(it.getId()));
 							}
 						}
 						out.println(sm.getXmlString());
-					} else if (sub instanceof ServerMessage.Item) {
-						ServerMessage.Item it = (ServerMessage.Item)sub;
+					} else if (resp instanceof ServerMessage.ItemResponse) {
+						ServerMessage.ItemResponse it = (ServerMessage.ItemResponse)resp;
 
 						Path mediaPath;
 						try {
@@ -77,6 +77,8 @@ System.out.println("file \"" + mediaPath.toString() + "\" is " + fileLen + " byt
 									int len = (new FileInputStream(mediaFile)).read(fileContent);
 
 									out.println(sm.getXmlString());
+									out.flush();
+									bos.write(new byte[]{(byte)0xEE, (byte)0x00, (byte)0xFF}, 0, 3);
 									bos.write(fileContent, 0, fileContent.length);
 									bos.flush();
 									bos.close();
@@ -85,13 +87,17 @@ System.out.println("file \"" + mediaPath.toString() + "\" is " + fileLen + " byt
 						} catch (IOException e) {
 							System.err.println("Error matching ID:" + e.getMessage());
 						}
+					} else if (resp instanceof ServerMessage.ItemDeletionResponse) {
+						ServerMessage.ItemDeletionResponse d = (ServerMessage.ItemDeletionResponse)resp;
+						System.err.println("Deleting item id " + d.getId() + " (well, eventually it will anyway)");
+						out.println(sm.getXmlString());
 					} else {
-						System.err.println("Unimplement response: " + sub.getClass().getName());
+						System.err.println("Unimplement response: " + resp.getClass().getName());
 					}
 					Utils.debugPrintln(1, "Server Message: " + sm);
 				}
 			} catch (MalformedMessageException e) {
-				System.err.println(ca.dioo.java.MonitorLib.Utils.getPrettyStackTrace(e));
+				System.err.println(ca.dioo.java.commons.Utils.getPrettyStackTrace(e));
 				System.err.println("Bogus message, discarding: " + e.getMessage());
 			}
 
