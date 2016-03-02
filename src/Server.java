@@ -129,7 +129,7 @@ class Server {
 	private static void executeAsClient() {
 		Path itemPath = null;
 		try {
-			itemPath = Utils.getPathFromId(new Integer(message));
+			itemPath = Utils.getVideoPathFromId(new Integer(message));
 		} catch (IOException e) {
 			System.err.println(e.getMessage());
 			System.exit(2);

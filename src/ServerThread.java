@@ -53,6 +53,7 @@ class ServerThread extends Thread {
 						ItemQueue.ItemBundle ib = ItemQueue.getItems(il.getPrevId());
 						if (ib != null) {
 							for (Item it: ib) {
+								//FIXME: need to divide ItemResponse from ItemListItem
 								il.add(new ServerMessage.ItemResponse(it.getId()));
 							}
 						}
@@ -62,7 +63,17 @@ class ServerThread extends Thread {
 
 						Path mediaPath;
 						try {
-							mediaPath = Utils.getPathFromId(it.getId());
+							switch (it.getMediaType()) {
+							case VID:
+								mediaPath = Utils.getVideoPathFromId(it.getId());
+								break;
+							case IMG:
+								mediaPath = Utils.getImagePathFromId(it.getId());
+								break;
+							default:
+								throw new Error("Unknown media type: " + it.getMediaType());
+							}
+
 							if (mediaPath == null) {
 								System.err.println("No file matching filter for id " + it.getId());
 								//FIXME: figure out response format and send it to client
