@@ -1,0 +1,13 @@
+#Path to the directory where the event files are found
+media_dir = /path/to/media/dir
+
+#globbing pattern to match files against when deleting. See http://docs.oracle.com/javase/7/docs/api/java/nio/file/FileSystem.html#getPathMatcher%28java.lang.String%29
+delete_prefix = ""
+delete_suffix = "-*.{avi,jpg}"
+
+#Delay after which events are removed from the queue
+delay = 10m
+
+#script to execute through the command-line when an event is removed from
+#the queue
+script = /path/to/script

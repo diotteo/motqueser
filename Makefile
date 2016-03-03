@@ -67,8 +67,13 @@ $(libs) $(test_libs):
 	$(MAKE) -C $(dir $(shell readlink $@)) jar
 
 
+#Circular dependencies
+$(patsubst %,$(BPATH)/%.class,ServerThread ControlThread): $(patsubst %,src/%.java,ServerThread ControlThread)
+	$(JAVAC) $(JAVAC_ARGS) -cp libs/*:$(BUILD_DIR) -d $(BUILD_DIR) $(patsubst %,src/%.java,ServerThread ControlThread)
+
+$(BPATH)/Utils.class: $(patsubst %,$(BPATH)/%.class,Config)
 $(BPATH)/ItemQueue.class: $(patsubst %,$(BPATH)/%.class,Item)
 $(BPATH)/DisplayThread.class: $(patsubst %,$(BPATH)/%.class,ItemQueue)
 $(BPATH)/ControlThread.class: $(patsubst %,$(BPATH)/%.class,ItemQueue)
-$(BPATH)/ServerThread.class: $(patsubst %,$(BPATH)/%.class,ControlThread Utils)
+$(BPATH)/ServerThread.class: $(patsubst %,$(BPATH)/%.class,Utils)
 $(BPATH)/Server.class: $(patsubst %,$(BPATH)/%.class,ControlThread ServerThread Utils)

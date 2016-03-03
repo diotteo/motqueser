@@ -20,14 +20,34 @@ public class Utils {
 	}
 
 
-	public static Path getVideoPathFromId(int itemId) throws IOException {
-		Path itemPath = null;
-		Path mediaDir = null;
+	public static boolean deleteById(int itemId) {
+		boolean wasDeleted = false;
 
 		try {
-			String dirStr = (new BufferedReader(new FileReader("dir.conf"))).readLine();
-			mediaDir = (new File(dirStr)).toPath();
-			DirectoryStream<Path> ds = Files.newDirectoryStream(mediaDir, itemId + "-*.avi");
+			DirectoryStream<Path> ds = Files.newDirectoryStream(Config.getMediaDir(),
+					Config.getDeletePrefix() + itemId + Config.getDeleteSuffix());
+
+			debugPrintln(3, "dir = " + Config.getMediaDir() + " glob = " + Config.getDeletePrefix() + itemId + Config.getDeleteSuffix());
+			for (Path p: ds) {
+				debugPrintln(2, p.toString());
+
+				p.toFile().delete();
+				wasDeleted = true;
+			}
+		} catch (IOException e) {
+			throw new Error("Error matching file:" + e.getMessage(), e);
+		}
+
+		return wasDeleted;
+	}
+
+
+	public static Path getVideoPathFromId(int itemId) throws IOException {
+		Path itemPath = null;
+
+		try {
+			DirectoryStream<Path> ds = Files.newDirectoryStream(Config.getMediaDir(),
+					itemId + "-*.avi");
 
 			for (Path p: ds) {
 				if (itemPath != null) {
@@ -69,4 +89,3 @@ public class Utils {
 		return itemPath;
 	}
 }
-

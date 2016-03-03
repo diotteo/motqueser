@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 
 import ca.dioo.java.MonitorLib.Message;
 import ca.dioo.java.MonitorLib.ControlMessage;
+import ca.dioo.java.MonitorLib.ClientMessage;
 import ca.dioo.java.MonitorLib.XmlFactory;
 import ca.dioo.java.MonitorLib.MessageFactory;
 import ca.dioo.java.MonitorLib.MalformedMessageException;
@@ -30,22 +31,13 @@ class ControlThread extends Thread {
 			try {
 				Message m = MessageFactory.parse(XmlFactory.newXmlParser(in));
 
-				if (!(m instanceof ControlMessage)) {
+				if (m instanceof ClientMessage) {
+					Utils.debugPrintln(2, "ClientMessage received in ControlThread, redirecting");
+					ServerThread.processClientMessage((ClientMessage)m, null, in, null, out);
+				} else if (!(m instanceof ControlMessage)) {
 					System.err.println("Bogus message, discarding: Message is not a ControlMessage");
 				} else {
-					StringBuffer sb = new StringBuffer();
-					ControlMessage cm = (ControlMessage)m;
-					sb.append("Control Message:");
-					for (ControlMessage.Item it: cm) {
-						sb.append(" Item: " + it.getId());
-						for (ControlMessage.Media med: it) {
-							sb.append(" Media: " + med.getPath());
-							ItemQueue.add(new Item(med.getPath(), it.getId()));
-						}
-					}
-					System.out.println(sb.toString());
-					//FIXME: fine-grained response
-					out.println("success");
+					processControlMessage((ControlMessage)m, in, out);
 				}
 			} catch (MalformedMessageException e) {
 				System.err.println(ca.dioo.java.commons.Utils.getPrettyStackTrace(e));
@@ -60,5 +52,21 @@ class ControlThread extends Thread {
 		} catch (IOException e) {
 			System.err.println("Exception in thread \n" + e.getMessage());
 		}
+	}
+
+
+	public static void processControlMessage(ControlMessage cm, BufferedReader in, PrintWriter out) {
+		StringBuffer sb = new StringBuffer();
+		sb.append("Control Message:");
+		for (ControlMessage.Item it: cm) {
+			sb.append(" Item: " + it.getId());
+			for (ControlMessage.Media med: it) {
+				sb.append(" Media: " + med.getPath());
+				ItemQueue.add(new Item(med.getPath(), it.getId()));
+			}
+		}
+		System.out.println(sb.toString());
+		//FIXME: fine-grained response
+		out.println("success");
 	}
 }

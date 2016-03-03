@@ -15,12 +15,21 @@ import java.nio.file.Files;
 import java.nio.file.FileSystems;
 import java.nio.file.DirectoryStream;
 
+import ca.dioo.java.MonitorLib.Message;
 import ca.dioo.java.MonitorLib.ControlMessage;
+import ca.dioo.java.MonitorLib.ClientMessage;
 
 enum NetConMode {
 	SERVER,
 	CLIENT,
-	INVALID }
+	INVALID,
+	}
+
+enum ClientReqType {
+	NEW_ITEM,
+	DEL_ITEM,
+	INVALID,
+}
 
 class Server {
 	private static final Class THIS_CLASS = Server.class;
@@ -29,7 +38,8 @@ class Server {
 
 	private static int port = 0;
 	private static NetConMode mode = NetConMode.SERVER;
-	private static String message;
+	private static int itemId = -1;
+	private static ClientReqType reqType = ClientReqType.INVALID;
 
 
 	public static void printHelp() {
@@ -37,8 +47,10 @@ class Server {
 				+ "\n  -h|--help"
 				+ "\n  -p|--port <port>:"
 				+ "\n      port to listen on (in client mode, port to connect to). If not specified, default to automatically allocated (random port)"
-				+ "\n  -c|--client <message>:"
-				+ "\n      client mode. Message to send to the server. The client must be run on the same machine as the server."
+				+ "\n  -c|--client <event ID>:"
+				+ "\n      client mode. Event ID to send to the server. The client must be run on the same machine as the server."
+				+ "\n  -z|--delete:"
+				+ "\n      Instead of sending a new event to the server, request a deletion. This is a client mode option."
 				+ "\n  -V|--version:"
 				+ "\n      Print version string and exit."
 				+ "\n  -d|--debug [lvl]:"
@@ -59,15 +71,34 @@ class Server {
 				new LongOpt("port",     LongOpt.REQUIRED_ARGUMENT, null, 'p'),
 				new LongOpt("client",   LongOpt.REQUIRED_ARGUMENT, null, 'c'),
 				new LongOpt("version",  LongOpt.REQUIRED_ARGUMENT, null, 'V'),
-				new LongOpt("debug",    LongOpt.OPTIONAL_ARGUMENT, null, 'd'),
+				//FIXME: OPTIONAL_ARGUMENT doesn't appear to actually parse arguments...
+				new LongOpt("debug",    LongOpt.REQUIRED_ARGUMENT, null, 'd'),
+				new LongOpt("delete",   LongOpt.NO_ARGUMENT,       null, 'z'),
 		};
 
-		Getopt g = new Getopt(PRGM, args, "c:p:hVd::", longopts);
+		Getopt g = new Getopt(PRGM, args, "c:d::hp:Vz", longopts);
 
 		int o;
 		while ((o = g.getopt()) != -1) {
 			char c = (char)o;
 			switch (o) {
+			case 'c':
+				itemId = new Integer(g.getOptarg());
+				mode = NetConMode.CLIENT;
+				reqType = ClientReqType.NEW_ITEM;
+				break;
+			case 'd':
+				Utils.dbgLvl++;
+				try {
+					String arg = g.getOptarg();
+					if (arg != null) {
+						Utils.dbgLvl = new Integer(arg);
+					}
+				} catch (NumberFormatException e) {
+					System.err.println((char)g.getOptopt() + ": invalid argument: must be an integer\n");
+					printHelp(1);
+				}
+				break;
 			case 'h':
 				printHelp(1);
 				break;
@@ -83,25 +114,12 @@ class Server {
 					printHelp(1);
 				}
 				break;
-			case 'c':
-				message = g.getOptarg();
-				mode = NetConMode.CLIENT;
-				break;
 			case 'V':
 				System.out.println(PRGM + " version " + VERSION);
 				System.exit(0);
 				break;
-			case 'd':
-				Utils.dbgLvl = 1;
-				try {
-					String arg = g.getOptarg();
-					if (arg != null) {
-						Utils.dbgLvl = new Integer(arg);
-					}
-				} catch (NumberFormatException e) {
-					System.err.println((char)g.getOptopt() + ": invalid argument: must be an integer\n");
-					printHelp(1);
-				}
+			case 'z':
+				reqType = ClientReqType.DEL_ITEM;
 				break;
 			case ':':
 				System.err.println((char)g.getOptopt() + ": argument required\n");
@@ -118,44 +136,55 @@ class Server {
 			}
 		}
 
-		if (mode == NetConMode.CLIENT && port == 0) {
-			System.err.println("Error: port must be specified in client mode\n");
+		if (mode == NetConMode.CLIENT) {
+			if (port == 0) {
+				System.err.println("Error: port must be specified in client mode\n");
+				printHelp(1);
+			} else if (itemId < 0) {
+				System.err.println("Error: event ID must be specified and >= 0 in client mode\n");
+				printHelp(1);
+			}
+		} else if (reqType != ClientReqType.INVALID) {
+			System.err.println("Error: client option specified in server mode\n");
 			printHelp(1);
 		}
 	}
 
 
-	//FIXME: have the server verify the file from ID (directories could differ for one)
+	//FIXME: have server verify that it sees the file
+	//FIXME: implement sessions, allowing control and client messages from everywhere
 	private static void executeAsClient() {
-		Path itemPath = null;
-		try {
-			itemPath = Utils.getVideoPathFromId(new Integer(message));
-		} catch (IOException e) {
-			System.err.println(e.getMessage());
-			System.exit(2);
+		Message msg;
+		String host;
+
+		switch (reqType) {
+		case DEL_ITEM:
+			msg = prepareClientMessage(itemId);
+			break;
+		case NEW_ITEM:
+			msg = prepareControlMessage(itemId);
+			break;
+		default:
+			throw new Error("Invalid request type: " + reqType);
 		}
 
-		if (itemPath == null) {
-			System.err.println("No file matched filter");
-			System.exit(2);
-		}
-
 		try {
-			ControlMessage cm = new ControlMessage();
-			ControlMessage.Item it = new ControlMessage.Item(new Integer(message));
-			ControlMessage.Media m = new ControlMessage.Media(itemPath.toString());
-			it.add(m);
-			cm.add(it);
-
 			Socket sock = new Socket(InetAddress.getByName("127.0.0.1"), port);
 			PrintWriter out = new PrintWriter(sock.getOutputStream(), true);
 			BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
-			out.println(cm.getXmlString());
+			out.println(msg.getXmlString());
 
-			String result = in.readLine();
-			if (!result.equals("success")) {
-				System.err.println(result);
-				System.exit(2);
+			if (msg instanceof ControlMessage) {
+				String result = in.readLine();
+				if (!result.equals("success")) {
+					System.err.println(result);
+					System.exit(2);
+				}
+			} else if (msg instanceof ClientMessage) {
+				String line;
+				while ((line = in.readLine()) != null) {
+					System.out.println(line);
+				}
 			}
 
 			in.close();
@@ -168,6 +197,38 @@ class Server {
 			System.err.println("Error in socket communication: " + e.getMessage());
 			System.exit(1);
 		}
+	}
+
+
+	private static Message prepareControlMessage(int itemId) {
+		Path itemPath = null;
+		try {
+			itemPath = Utils.getVideoPathFromId(itemId);
+		} catch (IOException e) {
+			System.err.println(e.getMessage());
+			System.exit(2);
+		}
+
+		if (itemPath == null) {
+			System.err.println("No file matched filter");
+			System.exit(2);
+		}
+
+		ControlMessage cm = new ControlMessage();
+		ControlMessage.Item it = new ControlMessage.Item(itemId);
+		ControlMessage.Media m = new ControlMessage.Media(itemPath.toString());
+		it.add(m);
+		cm.add(it);
+
+		return cm;
+	}
+
+
+	private static Message prepareClientMessage(int itemId) {
+		ClientMessage cm = new ClientMessage();
+		ClientMessage.ItemDeletionRequest req = new ClientMessage.ItemDeletionRequest(itemId);
+		cm.add(req);
+		return cm;
 	}
 
 

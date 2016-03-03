@@ -61,6 +61,25 @@ class ItemQueue {
 	}
 
 
+	public static boolean remove(int itemId) {
+		boolean wasRemoved = false;
+
+		lock.lock();
+		try {
+			ItemWrapper iw = ht.get(itemId);
+			if (iw != null) {
+				ht.remove(itemId);
+				itemQueue.remove(iw);
+				wasRemoved = true;
+			}
+		} finally {
+			lock.unlock();
+		}
+
+		return wasRemoved;
+	}
+
+
 	public static boolean add(Item item) throws IllegalArgumentException {
 		boolean ret = false;
 
