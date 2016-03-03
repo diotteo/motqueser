@@ -76,7 +76,7 @@ class Server {
 				new LongOpt("delete",   LongOpt.NO_ARGUMENT,       null, 'z'),
 		};
 
-		Getopt g = new Getopt(PRGM, args, "c:d::hp:Vz", longopts);
+		Getopt g = new Getopt(PRGM, args, "c:d:hp:Vz", longopts);
 
 		int o;
 		while ((o = g.getopt()) != -1) {
@@ -93,6 +93,8 @@ class Server {
 					String arg = g.getOptarg();
 					if (arg != null) {
 						Utils.dbgLvl = new Integer(arg);
+					} else {
+						throw new Error("java-getopt is bugged, sorry");
 					}
 				} catch (NumberFormatException e) {
 					System.err.println((char)g.getOptopt() + ": invalid argument: must be an integer\n");
@@ -238,7 +240,9 @@ class Server {
 			System.out.println("Starting " + PRGM + " listening on port " + servSock.getLocalPort());
 
 			DisplayThread dt = new DisplayThread();
+			ScriptRunnerThread srt = new ScriptRunnerThread();
 			dt.start();
+			srt.start();
 
 			while (true) {
 				Socket sock = servSock.accept();

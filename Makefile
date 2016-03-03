@@ -71,9 +71,9 @@ $(libs) $(test_libs):
 $(patsubst %,$(BPATH)/%.class,ServerThread ControlThread): $(patsubst %,src/%.java,ServerThread ControlThread)
 	$(JAVAC) $(JAVAC_ARGS) -cp libs/*:$(BUILD_DIR) -d $(BUILD_DIR) $(patsubst %,src/%.java,ServerThread ControlThread)
 
+$(patsubst %,$(BPATH)/%.class,ControlThread ServerThread): $(patsubst %,$(BPATH)/%.class,ItemQueue Utils)
 $(BPATH)/Utils.class: $(patsubst %,$(BPATH)/%.class,Config)
-$(BPATH)/ItemQueue.class: $(patsubst %,$(BPATH)/%.class,Item)
+$(BPATH)/ScriptRunnerThread.class: $(patsubst %,$(BPATH)/%.class,Config)
+$(BPATH)/ItemQueue.class: $(patsubst %,$(BPATH)/%.class,Item ScriptRunnerThread)
 $(BPATH)/DisplayThread.class: $(patsubst %,$(BPATH)/%.class,ItemQueue)
-$(BPATH)/ControlThread.class: $(patsubst %,$(BPATH)/%.class,ItemQueue)
-$(BPATH)/ServerThread.class: $(patsubst %,$(BPATH)/%.class,Utils)
 $(BPATH)/Server.class: $(patsubst %,$(BPATH)/%.class,ControlThread ServerThread Utils)

@@ -15,7 +15,7 @@ public class Config {
 
 	private static Path mediaDir = null;
 	private static String script = null;
-	private static String delay = null;
+	private static int delay = -1;
 	private static String deletePrefix = null;
 	private static String deleteSuffix = null;
 
@@ -32,6 +32,16 @@ public class Config {
 
 	public static Path getMediaDir() {
 		return mediaDir;
+	}
+
+
+	public static String getScript() {
+		return script;
+	}
+
+
+	public static int getDelay() {
+		return delay;
 	}
 
 
@@ -109,8 +119,12 @@ public class Config {
 					deleteSuffix = val;
 					break;
 				case "delay":
-					//FIXME: should be a Calendar interval or something
-					delay = val;
+					{
+						int i = new Integer(val);
+						if (i > 0) {
+							delay = i;
+						}
+					}
 					break;
 				default:
 					System.err.println("Ignoring unknown parameter \"" + name + "\" on line " + lineno);

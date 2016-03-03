@@ -6,7 +6,7 @@ delete_prefix = ""
 delete_suffix = "-*.{avi,jpg}"
 
 #Delay after which events are removed from the queue
-delay = 10m
+delay = 600
 
 #script to execute through the command-line when an event is removed from
 #the queue

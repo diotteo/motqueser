@@ -95,8 +95,12 @@ class ServerThread extends Thread {
 				}
 
 				if (mediaPath == null) {
-					System.err.println("No file matching filter for id " + it.getId());
-					//FIXME: figure out response format and send it to client
+					String errMsg = "No file matching filter for id " + it.getId();
+					System.err.println(errMsg);
+
+					ErrorMessage em = new ErrorMessage();
+					em.setErrorMessage(errMsg);
+					out.println(em.getXmlString());
 				} else {
 					File mediaFile = new File(mediaPath.toString());
 					if (mediaFile.length() > Integer.MAX_VALUE) {
@@ -128,7 +132,6 @@ System.out.println("file \"" + mediaPath.toString() + "\" is " + fileLen + " byt
 				em.setErrorMessage(errMsg);
 				out.println(em.getXmlString());
 
-				//FIXME: send error message
 			} else {
 				System.err.println("Deleting item id " + idr.getId());
 				Utils.deleteById(idr.getId());
@@ -137,8 +140,10 @@ System.out.println("file \"" + mediaPath.toString() + "\" is " + fileLen + " byt
 
 		} else if (resp instanceof ServerMessage.SnoozeResponse) {
 			ServerMessage.SnoozeResponse sr = (ServerMessage.SnoozeResponse)resp;
-			System.err.println("Unimplement response: " + resp.getClass().getName());
 
+			int interval = sr.getSnoozeInterval();
+			ItemQueue.snoozeFor(interval);
+			out.println(sm.getXmlString());
 /*
 		} else if (resp instanceof ServerMessage.RearmResponse) {
 			ServerMessage.SnoozeResponse sr = (ServerMessage.RearmResponse)resp;

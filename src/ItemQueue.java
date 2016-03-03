@@ -14,8 +14,8 @@ class ItemQueue {
 	private static ConcurrentLinkedQueue<ItemWrapper> itemQueue = new ConcurrentLinkedQueue<ItemWrapper>();
 	private static Hashtable<Integer, ItemWrapper> ht = new Hashtable<Integer, ItemWrapper>();
 	private static ReentrantLock lock = new ReentrantLock();
-	private static final int DELAY = -600;
 	private static int minId = 0;
+	private static long snoozeUntilTs = -1;
 
 
 	private static class ItemWrapper extends Item {
@@ -80,12 +80,45 @@ class ItemQueue {
 	}
 
 
+	public static boolean snoozeUntil(long ts) {
+		boolean wasExtended = false;
+
+		if (snoozeUntilTs < ts) {
+			snoozeUntilTs = ts;
+			wasExtended = true;
+		}
+
+		return wasExtended;
+	}
+
+
+	public static boolean snoozeFor(int seconds) {
+		if (seconds < 1) {
+			return false;
+		}
+
+		GregorianCalendar cl = new GregorianCalendar();
+		cl.add(Calendar.SECOND, seconds);
+		snoozeUntil(cl.getTimeInMillis());
+		return true;
+	}
+
+
+	public static void unsnooze() {
+		snoozeUntilTs = -1;
+	}
+
+
 	public static boolean add(Item item) throws IllegalArgumentException {
 		boolean ret = false;
+		long curTs = (new GregorianCalendar()).getTimeInMillis();
 
 		lock.lock();
 		try {
-			if (item.getId() < minId) {
+			if (curTs <= snoozeUntilTs) {
+System.err.println("snoozed");
+				return false;
+			} else if (item.getId() < minId) {
 				//FIXME: Error
 				throw new Error("id too small: " + item.getId() + " < " + minId);
 			} else if (ht.containsKey(item.getId())) {
@@ -103,6 +136,11 @@ class ItemQueue {
 	}
 
 
+	private static void queueForScript(Item it) {
+		ScriptRunnerThread.add(it);
+	}
+
+
 	/**
 	 * if itemId = 3, only items added to the queue after ID 3 should be
 	 * returned (i.e.: ID 3 will not be returned).
@@ -111,7 +149,7 @@ class ItemQueue {
 	 */
 	public static ItemBundle getItems(int itemId) {
 		GregorianCalendar cl = new GregorianCalendar();
-		cl.add(Calendar.MINUTE, DELAY);
+		cl.add(Calendar.SECOND, -Config.getDelay());
 		long minTs = cl.getTimeInMillis();
 		int lastId = -1;
 		ItemBundle ib = null;
@@ -127,6 +165,9 @@ class ItemQueue {
 						minId = id + 1;
 					}
 					i.remove();
+					ht.remove(itwpr.getId());
+					queueForScript(itwpr);
+
 				} else {
 					ArrayList<Item> itemList = new ArrayList<Item>();
 
