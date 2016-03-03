@@ -66,12 +66,9 @@ public class Utils {
 
 	public static Path getImagePathFromId(int itemId) throws IOException {
 		Path itemPath = null;
-		Path mediaDir = null;
 
 		try {
-			String dirStr = (new BufferedReader(new FileReader("dir.conf"))).readLine();
-			mediaDir = (new File(dirStr)).toPath();
-			DirectoryStream<Path> ds = Files.newDirectoryStream(mediaDir, itemId + "-*.jpg");
+			DirectoryStream<Path> ds = Files.newDirectoryStream(Config.getMediaDir(), itemId + "-*.jpg");
 
 			ArrayList<Path> al = new ArrayList<Path>();
 			for (Path p: ds) {

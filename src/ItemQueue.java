@@ -85,6 +85,7 @@ class ItemQueue {
 
 		if (snoozeUntilTs < ts) {
 			snoozeUntilTs = ts;
+			Utils.debugPrintln(4, "Snoozing until " + ts);
 			wasExtended = true;
 		}
 
@@ -115,8 +116,9 @@ class ItemQueue {
 
 		lock.lock();
 		try {
+			Utils.debugPrintln(4, "cur:" + curTs + " snooze:" + snoozeUntilTs);
 			if (curTs <= snoozeUntilTs) {
-System.err.println("snoozed");
+				Utils.debugPrintln(4, "snoozed");
 				return false;
 			} else if (item.getId() < minId) {
 				//FIXME: Error
