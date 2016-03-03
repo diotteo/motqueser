@@ -144,14 +144,13 @@ System.out.println("file \"" + mediaPath.toString() + "\" is " + fileLen + " byt
 			int interval = sr.getSnoozeInterval();
 			ItemQueue.snoozeFor(interval);
 			out.println(sm.getXmlString());
-/*
-		} else if (resp instanceof ServerMessage.RearmResponse) {
-			ServerMessage.SnoozeResponse sr = (ServerMessage.RearmResponse)resp;
-			System.err.println("Unimplement response: " + resp.getClass().getName());
-*/
+
+		} else if (resp instanceof ServerMessage.UnsnoozeResponse) {
+			ServerMessage.UnsnoozeResponse sr = (ServerMessage.UnsnoozeResponse)resp;
+			ItemQueue.unsnooze();
 
 		} else {
-			System.err.println("Unimplement response: " + resp.getClass().getName());
+			System.err.println("Unimplemented response: " + resp.getClass().getName());
 		}
 		Utils.debugPrintln(1, "Server Message: " + sm);
 	}
