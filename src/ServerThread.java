@@ -138,6 +138,22 @@ System.out.println("file \"" + mediaPath.toString() + "\" is " + fileLen + " byt
 				out.println(sm.getXmlString());
 			}
 
+		} else if (resp instanceof ServerMessage.ItemPreservationResponse) {
+			ServerMessage.ItemPreservationResponse ipr = (ServerMessage.ItemPreservationResponse)resp;
+
+			boolean itemExists = ItemQueue.keep(ipr.getId());
+			if (!itemExists) {
+				String errMsg = "Disallowed preservation request for ID " + ipr.getId();
+				ErrorMessage em = new ErrorMessage();
+				System.err.println(errMsg);
+				em.setErrorMessage(errMsg);
+				out.println(em.getXmlString());
+
+			} else {
+				System.err.println("Keeping item id " + ipr.getId());
+				out.println(sm.getXmlString());
+			}
+
 		} else if (resp instanceof ServerMessage.SnoozeResponse) {
 			ServerMessage.SnoozeResponse sr = (ServerMessage.SnoozeResponse)resp;
 
