@@ -20,7 +20,24 @@ test_objects := $(patsubst test/%.java,$(BUILD_DIR)/%.class,$(test_src))
 test_libs := $(wildcard test/libs/*.jar)
 
 
-run:
+all:
+
+
+.PHONY: dist
+dist: jar
+	@[ -d dist/$(PRGM) ] || mkdir -p dist/$(PRGM)
+	cp $(PRGM).jar libs/*.jar dist/$(PRGM)/
+	cp Server.sh dist/$(PRGM)/
+	cp server.conf.sample dist/$(PRGM)/
+	cd dist/ && tar -cf $(PRGM).tar $(PRGM)/
+
+
+.PHONY: jar
+jar: $(PRGM).jar
+
+
+$(PRGM).jar: $(objects)
+	jar -cf $@ -C $(BUILD_DIR) .
 
 
 .PHONY: all
@@ -53,6 +70,8 @@ $(BUILD_DIR):
 .PHONY: clean
 clean:
 	@[ ! -e $(BUILD_DIR) ] || rm -rv $(BUILD_DIR)
+	@[ ! -e dist ] || rm -rv dist
+	@[ ! -e $(PRGM).jar ] || rm -rv $(PRGM).jar
 
 
 libs:
@@ -73,7 +92,7 @@ $(patsubst %,$(BPATH)/%.class,ServerThread ControlThread): $(patsubst %,src/%.ja
 
 $(patsubst %,$(BPATH)/%.class,ControlThread ServerThread): $(patsubst %,$(BPATH)/%.class,ItemQueue Utils)
 $(BPATH)/Utils.class: $(patsubst %,$(BPATH)/%.class,Config)
-$(BPATH)/ScriptRunnerThread.class: $(patsubst %,$(BPATH)/%.class,Config)
+$(BPATH)/ScriptRunnerThread.class: $(patsubst %,$(BPATH)/%.class,Config Utils)
 $(BPATH)/ItemQueue.class: $(patsubst %,$(BPATH)/%.class,Item ScriptRunnerThread)
 $(BPATH)/DisplayThread.class: $(patsubst %,$(BPATH)/%.class,ItemQueue)
 $(BPATH)/Server.class: $(patsubst %,$(BPATH)/%.class,ControlThread ServerThread Utils)

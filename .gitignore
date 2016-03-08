@@ -1,4 +1,4 @@
 *.swp
 libs/
 build/
-dir.conf
+server.conf
