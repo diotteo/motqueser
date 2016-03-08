@@ -1,7 +1,8 @@
 package ca.dioo.java.SurveillanceServer;
 
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.Hashtable;
+import java.util.LinkedHashMap;
+import java.util.Set;
+import java.util.Map;
 import java.util.Enumeration;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -11,8 +12,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 class ItemQueue {
-	private static ConcurrentLinkedQueue<ItemWrapper> itemQueue = new ConcurrentLinkedQueue<ItemWrapper>();
-	private static Hashtable<Integer, ItemWrapper> ht = new Hashtable<Integer, ItemWrapper>();
+	private static LinkedHashMap<Integer, ItemWrapper> itemQueue = new LinkedHashMap<Integer, ItemWrapper>();
 	private static ReentrantLock lock = new ReentrantLock();
 	private static int minId = 0;
 	private static long snoozeUntilTs = -1;
@@ -61,25 +61,6 @@ class ItemQueue {
 	}
 
 
-	public static boolean remove(int itemId) {
-		boolean wasRemoved = false;
-
-		lock.lock();
-		try {
-			ItemWrapper iw = ht.get(itemId);
-			if (iw != null) {
-				ht.remove(itemId);
-				itemQueue.remove(iw);
-				wasRemoved = true;
-			}
-		} finally {
-			lock.unlock();
-		}
-
-		return wasRemoved;
-	}
-
-
 	public static boolean snoozeUntil(long ts) {
 		boolean wasExtended = false;
 
@@ -123,18 +104,56 @@ class ItemQueue {
 			} else if (item.getId() < minId) {
 				//FIXME: Error
 				throw new Error("id too small: " + item.getId() + " < " + minId);
-			} else if (ht.containsKey(item.getId())) {
+			} else if (itemQueue.containsKey(item.getId())) {
 				throw new IllegalArgumentException("id " + item.getId() + " already exists");
 			} else {
 				ItemWrapper iw = new ItemWrapper(item);
-				ret = itemQueue.add(iw);
-				ItemWrapper tmp = ht.put(iw.getId(), iw);
+				ItemWrapper tmp = itemQueue.put(iw.getId(), iw);
 				assert (tmp == null);
 			}
 		} finally {
 			lock.unlock();
 		}
 		return ret;
+	}
+
+
+	public static boolean remove(int itemId) {
+		boolean wasRemoved = false;
+
+		lock.lock();
+		try {
+			Item it = itemQueue.remove(itemId);
+			if (null != it) {
+				wasRemoved = true;
+			}
+		} finally {
+			lock.unlock();
+		}
+
+		return wasRemoved;
+	}
+
+
+	public static boolean keep(int itemId) {
+		boolean wasRemoved = false;
+		Item it;
+
+		lock.lock();
+		try {
+			it = itemQueue.remove(itemId);
+			if (null != it) {
+				wasRemoved = true;
+			}
+		} finally {
+			lock.unlock();
+		}
+
+		if (wasRemoved) {
+			queueForScript(it);
+		}
+
+		return wasRemoved;
 	}
 
 
@@ -155,44 +174,38 @@ class ItemQueue {
 		long minTs = cl.getTimeInMillis();
 		int lastId = -1;
 		ItemBundle ib = null;
+		ArrayList<Item> itemList = new ArrayList<Item>();
 
 		lock.lock();
 		try {
-			Iterator<ItemWrapper> i = itemQueue.iterator();
-			while (i.hasNext()) {
-				ItemWrapper itwpr = i.next();
+			Set<Map.Entry<Integer, ItemWrapper>> set = itemQueue.entrySet();
+			Map.Entry<Integer, ItemWrapper> entry;
+			Iterator<Map.Entry<Integer, ItemWrapper>> i;
+			for (i = set.iterator(); i.hasNext(); ) {
+				entry = i.next();
+				ItemWrapper itwpr = entry.getValue();
+				int id = itwpr.getId();
+
 				if (itwpr.getTimestamp() < minTs) {
-					int id = itwpr.getId();
 					if (id > minId) {
 						minId = id + 1;
 					}
 					i.remove();
-					ht.remove(itwpr.getId());
 					queueForScript(itwpr);
 
+				/* If we find itemId, then all items added so far predate
+				 * what was requested: empty the list.
+				 */
+				} else if (itwpr.getId() == itemId) {
+					itemList.clear();
 				} else {
-					ArrayList<Item> itemList = new ArrayList<Item>();
-
-					for ( ; ; itwpr = i.next()) {
-						/* If we find itemId, then all items added so far predate
-						 * what was requested: empty the list.
-						 */
-						if (itwpr.getId() == itemId) {
-							itemList = new ArrayList<Item>();
-						} else {
-							itemList.add(itwpr);
-						}
-
-						if (!i.hasNext()) {
-							break;
-						}
-					}
-
-					if (itemList.size() > 0) {
-						lastId = itwpr.getId();
-						ib = new ItemBundle(itemList, lastId);
-					}
+					itemList.add(itwpr);
+					lastId = id;
 				}
+			}
+
+			if (itemList.size() > 0) {
+				ib = new ItemBundle(itemList, lastId);
 			}
 		} finally {
 			lock.unlock();
