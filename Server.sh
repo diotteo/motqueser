@@ -3,4 +3,4 @@
 dir=$(dirname $0)
 cd $dir
 
-java -cp '*' ca.dioo.java.SurveillanceServer.Server $@
+java -cp 'dist/Server/*:*' ca.dioo.java.SurveillanceServer.Server $@
