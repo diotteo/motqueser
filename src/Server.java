@@ -36,7 +36,6 @@ class Server {
 	public static final String PRGM = THIS_CLASS.getSimpleName();
 	private static final String VERSION = "0.1";
 
-	private static int port = 0;
 	private static NetConMode mode = NetConMode.SERVER;
 	private static int itemId = -1;
 	private static ClientReqType reqType = ClientReqType.INVALID;
@@ -105,15 +104,19 @@ class Server {
 				printHelp(1);
 				break;
 			case 'p':
-				try {
-					port = new Integer(g.getOptarg());
-				} catch (NumberFormatException e) {
-					System.err.println(c + ": argument must be a number");
-					printHelp(1);
-				}
-				if (port < 1 || port > 65535) {
-					System.err.println(c + ": \"" + port + "\" is not 1 <= port <= 65535");
-					printHelp(1);
+				{
+					int p = 0;
+					try {
+						p = new Integer(g.getOptarg());
+					} catch (NumberFormatException e) {
+						System.err.println(c + ": argument must be a number");
+						printHelp(1);
+					}
+					if (p < 1 || p > 65535) {
+						System.err.println(c + ": \"" + p + "\" is not 1 <= port <= 65535");
+						printHelp(1);
+					}
+					Config.port = p;
 				}
 				break;
 			case 'V':
@@ -139,7 +142,7 @@ class Server {
 		}
 
 		if (mode == NetConMode.CLIENT) {
-			if (port == 0) {
+			if (Config.port == 0) {
 				System.err.println("Error: port must be specified in client mode\n");
 				printHelp(1);
 			} else if (itemId < 0) {
@@ -171,7 +174,7 @@ class Server {
 		}
 
 		try {
-			Socket sock = new Socket(InetAddress.getByName("127.0.0.1"), port);
+			Socket sock = new Socket(InetAddress.getByName("127.0.0.1"), Config.port);
 			PrintWriter out = new PrintWriter(sock.getOutputStream(), true);
 			BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
 			out.println(msg.getXmlString());
@@ -236,7 +239,7 @@ class Server {
 
 	public static void executeAsServer() {
 		try {
-			ServerSocket servSock = new ServerSocket(port);
+			ServerSocket servSock = new ServerSocket(Config.port);
 			System.out.println("Starting " + PRGM + " listening on port " + servSock.getLocalPort());
 
 			DisplayThread dt = new DisplayThread();
@@ -258,7 +261,7 @@ class Server {
 				}
 			}
 		} catch (IOException e) {
-			System.err.println("Exception listening on port " + port + "\n" + e.getMessage());
+			System.err.println("Exception listening on port " + Config.port + "\n" + e.getMessage());
 			System.exit(1);
 		}
 	}

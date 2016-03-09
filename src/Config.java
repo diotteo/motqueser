@@ -13,6 +13,7 @@ import java.io.File;
 public class Config {
 	private static File configFile = null;
 
+	public static int port;
 	private static Path mediaDir = null;
 	private static String script = null;
 	private static int delay = -1;
@@ -106,6 +107,14 @@ public class Config {
 
 
 				switch (name) {
+				case "port":
+					{
+						int i = new Integer(val);
+						if (i > 0 && i < 65536) {
+							port = i;
+						}
+					}
+					break;
 				case "media_dir":
 					mediaDir = (new File(val)).toPath();
 					break;

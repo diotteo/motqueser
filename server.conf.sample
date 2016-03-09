@@ -1,3 +1,6 @@
+#network port to use (used by both server and client), can be overriden via the command-line
+port = 8080
+
 #Path to the directory where the event files are found
 media_dir = /path/to/media/dir
 
