@@ -212,7 +212,7 @@ class Server {
 		}
 
 		if (itemPath == null) {
-			System.err.println("No file matched filter");
+			System.err.println("No file matched filter for item id " + itemId);
 			System.exit(2);
 		}
 
