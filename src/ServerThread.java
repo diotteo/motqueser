@@ -73,8 +73,7 @@ class ServerThread extends Thread {
 			ItemQueue.ItemBundle ib = ItemQueue.getItems(il.getPrevId());
 			if (ib != null) {
 				for (Item it: ib) {
-					//FIXME: need to divide ItemResponse from ItemListItem
-					il.add(new ServerMessage.ItemResponse(it.getId()));
+					il.add(new ServerMessage.Item(it.getId()));
 				}
 			}
 			out.println(sm.getXmlString());
@@ -111,6 +110,7 @@ class ServerThread extends Thread {
 System.out.println("file \"" + mediaPath.toString() + "\" is " + fileLen + " bytes long");
 						int len = (new FileInputStream(mediaFile)).read(fileContent);
 
+						it.setMediaSize(len);
 						out.println(sm.getXmlString());
 						out.flush();
 						bos.write(new byte[]{(byte)0xEE, (byte)0x00, (byte)0xFF}, 0, 3);
