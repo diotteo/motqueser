@@ -1,4 +1,4 @@
-package ca.dioo.java.SurveillanceServer;
+package ca.dioo.java.motqueser;
 
 import java.util.Vector;
 

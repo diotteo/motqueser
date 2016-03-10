@@ -1,4 +1,4 @@
-package ca.dioo.java.SurveillanceServer;
+package ca.dioo.java.motqueser;
 
 import gnu.getopt.*;
 import java.net.Socket;
@@ -31,8 +31,8 @@ enum ClientReqType {
 	INVALID,
 }
 
-class Server {
-	private static final Class THIS_CLASS = Server.class;
+class Motqueser {
+	private static final Class THIS_CLASS = Motqueser.class;
 	public static final String PRGM = THIS_CLASS.getSimpleName();
 	private static final String VERSION = "0.1";
 
@@ -42,7 +42,7 @@ class Server {
 
 
 	public static void printHelp() {
-		System.err.println("Usage: Server [options]"
+		System.err.println("Usage: " + Motqueser.class.getName() + " [options]"
 				+ "\n  -h|--help"
 				+ "\n  -p|--port <port>:"
 				+ "\n      port to listen on (in client mode, port to connect to). If not specified, default to automatically allocated (random port)"

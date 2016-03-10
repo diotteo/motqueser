@@ -1,4 +1,4 @@
-package ca.dioo.java.SurveillanceServer;
+package ca.dioo.java.motqueser;
 
 class Item {
 	private String media;

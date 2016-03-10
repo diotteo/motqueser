@@ -1,4 +1,4 @@
-package ca.dioo.java.SurveillanceServer;
+package ca.dioo.java.motqueser;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -57,7 +57,7 @@ public class Config {
 
 
 	private static File getConfigFile() {
-		return new File("server.conf");
+		return new File("motqueser.conf");
 	}
 
 

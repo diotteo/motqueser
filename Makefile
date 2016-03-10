@@ -3,8 +3,8 @@ JAVA_ARGS ?= #-agentlib:jdwp=transport=dt_socket,server=y,suspend=n
 JAVAC ?= javac
 JAVAC_ARGS ?= -Xlint:unchecked
 
-PRGM := Server
-PKG := ca/dioo/java/SurveillanceServer
+PRGM := motqueser
+PKG := ca/dioo/java/motqueser
 ROOT_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
 BUILD_DIR := $(ROOT_DIR)/build
 BPATH := $(BUILD_DIR)/$(PKG)
@@ -27,8 +27,8 @@ all:
 dist: jar
 	@[ -d dist/$(PRGM) ] || mkdir -p dist/$(PRGM)
 	cp $(PRGM).jar libs/*.jar dist/$(PRGM)/
-	cp Server.sh dist/$(PRGM)/
-	cp server.conf.sample dist/$(PRGM)/
+	cp $(PRGM).sh dist/$(PRGM)/
+	cp $(PRGM).conf.sample dist/$(PRGM)/
 	cd dist/ && tar -cf $(PRGM).tar $(PRGM)/
 
 
@@ -95,4 +95,4 @@ $(BPATH)/Utils.class: $(patsubst %,$(BPATH)/%.class,Config)
 $(BPATH)/ScriptRunnerThread.class: $(patsubst %,$(BPATH)/%.class,Config Utils)
 $(BPATH)/ItemQueue.class: $(patsubst %,$(BPATH)/%.class,Item ScriptRunnerThread)
 $(BPATH)/DisplayThread.class: $(patsubst %,$(BPATH)/%.class,ItemQueue)
-$(BPATH)/Server.class: $(patsubst %,$(BPATH)/%.class,ControlThread ServerThread Utils)
+$(BPATH)/Motqueser.class: $(patsubst %,$(BPATH)/%.class,ControlThread ServerThread Utils)

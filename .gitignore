@@ -1,6 +1,6 @@
 *.swp
-Server.jar
+motqueser.jar
 libs/
 dist/
 build/
-server.conf
+motqueser.conf
