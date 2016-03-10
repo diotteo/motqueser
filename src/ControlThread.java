@@ -44,8 +44,9 @@ class ControlThread extends Thread {
 				System.err.println(ca.dioo.java.commons.Utils.getPrettyStackTrace(e));
 				System.err.println("Bogus message, discarding: " + e.getMessage());
 			} catch (IllegalArgumentException e) {
-				//FIXME: fine-grained response
-				out.println("failure: " + e.getMessage());
+				ErrorMessage em = new ErrorMessage();
+				em.setErrorMessage("Something went wrong with control_message: " + e.getMessage());
+				out.println(em.getXmlString());
 			}
 
 			Utils.debugPrintln(2, "Closing thread");
@@ -61,9 +62,17 @@ class ControlThread extends Thread {
 		sb.append("Control Message:");
 		for (ControlMessage.Item it: cm) {
 			sb.append(" Item: " + it.getId());
-			for (ControlMessage.Media med: it) {
-				sb.append(" Media: " + med.getPath());
-				ItemQueue.add(new Item(med.getPath(), it.getId()));
+			if (ItemQueue.isSnoozed()) {
+				Utils.debugPrintln(2, "Snoozed, deleting media files for " + it.getId());
+
+				//FIXME: delete media? maybe add a configuration parameter to control this?
+				Utils.deleteById(it.getId());
+			} else {
+				try {
+					ItemQueue.add(new Item(it.getId()));
+				} catch (IOException e) {
+					throw new Error("IOException occured: " + e.getMessage(), e);
+				}
 			}
 		}
 		System.out.println(sb.toString());

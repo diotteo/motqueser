@@ -1,12 +1,20 @@
 package ca.dioo.java.motqueser;
 
-class Item {
-	private String media;
-	private int id;
+import java.nio.file.Path;
+import java.io.IOException;
 
-	public Item(String media, int id) {
-		this.media = media;
-		this.id = id;
+class Item {
+	private int id;
+	private Path vid;
+
+
+	public Item(int id) throws IOException {
+		setId(id);
+		vid = Utils.getVideoPathFromId(id);
+	}
+
+	public Path getPath() {
+		return vid;
 	}
 
 
@@ -20,12 +28,7 @@ class Item {
 	}
 
 
-	public String getMedia() {
-		return media;
-	}
-
-
 	public String toString() {
-		return "id:" + Integer.toString(id) + " media:" + media;
+		return "id:" + Integer.toString(id);
 	}
 }

@@ -10,6 +10,7 @@ import java.util.Calendar;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.io.IOException;
 
 class ItemQueue {
 	private static LinkedHashMap<Integer, ItemWrapper> itemQueue = new LinkedHashMap<Integer, ItemWrapper>();
@@ -21,13 +22,12 @@ class ItemQueue {
 	private static class ItemWrapper extends Item {
 		private long ts;
 
-		ItemWrapper(Item it) {
-			super(it.getMedia(), it.getId());
+		ItemWrapper(Item it) throws IOException {
+			super(it.getId());
 			ts = (new Date()).getTime();
 		}
 
-
-		public long getTimestamp() {
+		long getTimestamp() {
 			return ts;
 		}
 	}
@@ -91,25 +91,40 @@ class ItemQueue {
 	}
 
 
-	public static boolean add(Item item) throws IllegalArgumentException {
+	public static boolean isSnoozed() {
+		return isSnoozed((new GregorianCalendar()).getTimeInMillis());
+	}
+
+
+	public static boolean isSnoozed(long timestamp) {
+		return (timestamp <= snoozeUntilTs);
+	}
+
+
+	public static boolean add(Item item) throws IllegalArgumentException, IOException {
+		return add(item, (new GregorianCalendar()).getTimeInMillis());
+	}
+
+
+	public static boolean add(Item item, long timestamp) throws IllegalArgumentException, IOException {
 		boolean ret = false;
-		long curTs = (new GregorianCalendar()).getTimeInMillis();
+		long curTs = timestamp;
 
 		lock.lock();
 		try {
 			Utils.debugPrintln(4, "cur:" + curTs + " snooze:" + snoozeUntilTs);
-			if (curTs <= snoozeUntilTs) {
+			if (isSnoozed(curTs)) {
 				Utils.debugPrintln(4, "snoozed");
 				return false;
 			} else if (item.getId() < minId) {
-				//FIXME: Error
-				throw new Error("id too small: " + item.getId() + " < " + minId);
+				throw new IllegalArgumentException("id too small: " + item.getId() + " < " + minId);
 			} else if (itemQueue.containsKey(item.getId())) {
 				throw new IllegalArgumentException("id " + item.getId() + " already exists");
 			} else {
 				ItemWrapper iw = new ItemWrapper(item);
 				ItemWrapper tmp = itemQueue.put(iw.getId(), iw);
 				assert (tmp == null);
+				ret = true;
 			}
 		} finally {
 			lock.unlock();

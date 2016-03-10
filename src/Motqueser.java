@@ -221,8 +221,6 @@ class Motqueser {
 
 		ControlMessage cm = new ControlMessage();
 		ControlMessage.Item it = new ControlMessage.Item(itemId);
-		ControlMessage.Media m = new ControlMessage.Media(itemPath.toString());
-		it.add(m);
 		cm.add(it);
 
 		return cm;
