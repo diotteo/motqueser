@@ -3,11 +3,11 @@ package ca.dioo.java.motqueser;
 import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.Map;
-import java.util.Enumeration;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Calendar;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.Collection;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.io.IOException;
@@ -37,8 +37,8 @@ class ItemQueue {
 		private int lastId;
 		private ArrayList<Item> itemList;
 
-		ItemBundle(ArrayList<Item> itemList, int lastId) {
-			this.itemList = itemList;
+		ItemBundle(Collection<Item> itemList, int lastId) {
+			this.itemList = new ArrayList<Item>(itemList);
 			this.lastId = lastId;
 		}
 
