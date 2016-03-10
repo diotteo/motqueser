@@ -97,8 +97,7 @@ class ServerThread extends Thread {
 					String errMsg = "No file matching filter for id " + it.getId();
 					System.err.println(errMsg);
 
-					ErrorMessage em = new ErrorMessage();
-					em.setErrorMessage(errMsg);
+					ErrorMessage em = new ErrorMessage(errMsg);
 					out.println(em.getXmlString());
 				} else {
 					File mediaFile = new File(mediaPath.toString());
@@ -127,9 +126,8 @@ System.out.println("file \"" + mediaPath.toString() + "\" is " + fileLen + " byt
 			boolean canRemove = ItemQueue.remove(idr.getId());
 			if (!canRemove) {
 				String errMsg = "Disallowed deletion request for ID " + idr.getId();
-				ErrorMessage em = new ErrorMessage();
+				ErrorMessage em = new ErrorMessage(errMsg);
 				System.err.println(errMsg);
-				em.setErrorMessage(errMsg);
 				out.println(em.getXmlString());
 
 			} else {
@@ -144,9 +142,8 @@ System.out.println("file \"" + mediaPath.toString() + "\" is " + fileLen + " byt
 			boolean itemExists = ItemQueue.keep(ipr.getId());
 			if (!itemExists) {
 				String errMsg = "Disallowed preservation request for ID " + ipr.getId();
-				ErrorMessage em = new ErrorMessage();
+				ErrorMessage em = new ErrorMessage(errMsg);
 				System.err.println(errMsg);
-				em.setErrorMessage(errMsg);
 				out.println(em.getXmlString());
 
 			} else {

@@ -44,8 +44,7 @@ class ControlThread extends Thread {
 				System.err.println(ca.dioo.java.commons.Utils.getPrettyStackTrace(e));
 				System.err.println("Bogus message, discarding: " + e.getMessage());
 			} catch (IllegalArgumentException e) {
-				ErrorMessage em = new ErrorMessage();
-				em.setErrorMessage("Something went wrong with control_message: " + e.getMessage());
+				ErrorMessage em = new ErrorMessage("Something went wrong with control_message: " + e.getMessage());
 				out.println(em.getXmlString());
 			}
 
