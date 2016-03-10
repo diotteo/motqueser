@@ -15,9 +15,9 @@ import java.nio.file.Files;
 import java.nio.file.FileSystems;
 import java.nio.file.DirectoryStream;
 
-import ca.dioo.java.MonitorLib.Message;
-import ca.dioo.java.MonitorLib.ControlMessage;
-import ca.dioo.java.MonitorLib.ClientMessage;
+import ca.dioo.java.libmotqueser.Message;
+import ca.dioo.java.libmotqueser.ControlMessage;
+import ca.dioo.java.libmotqueser.ClientMessage;
 
 enum NetConMode {
 	SERVER,

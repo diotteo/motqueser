@@ -12,13 +12,13 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.PrintWriter;
 
-import ca.dioo.java.MonitorLib.XmlFactory;
-import ca.dioo.java.MonitorLib.MessageFactory;
-import ca.dioo.java.MonitorLib.Message;
-import ca.dioo.java.MonitorLib.ClientMessage;
-import ca.dioo.java.MonitorLib.ServerMessage;
-import ca.dioo.java.MonitorLib.ErrorMessage;
-import ca.dioo.java.MonitorLib.MalformedMessageException;
+import ca.dioo.java.libmotqueser.XmlFactory;
+import ca.dioo.java.libmotqueser.MessageFactory;
+import ca.dioo.java.libmotqueser.Message;
+import ca.dioo.java.libmotqueser.ClientMessage;
+import ca.dioo.java.libmotqueser.ServerMessage;
+import ca.dioo.java.libmotqueser.ErrorMessage;
+import ca.dioo.java.libmotqueser.MalformedMessageException;
 
 class ServerThread extends Thread {
 	private static final Class THIS_CLASS = ServerThread.class;

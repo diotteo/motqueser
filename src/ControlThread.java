@@ -6,12 +6,13 @@ import java.io.PrintWriter;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
-import ca.dioo.java.MonitorLib.Message;
-import ca.dioo.java.MonitorLib.ControlMessage;
-import ca.dioo.java.MonitorLib.ClientMessage;
-import ca.dioo.java.MonitorLib.XmlFactory;
-import ca.dioo.java.MonitorLib.MessageFactory;
-import ca.dioo.java.MonitorLib.MalformedMessageException;
+import ca.dioo.java.libmotqueser.Message;
+import ca.dioo.java.libmotqueser.ControlMessage;
+import ca.dioo.java.libmotqueser.ClientMessage;
+import ca.dioo.java.libmotqueser.ErrorMessage;
+import ca.dioo.java.libmotqueser.XmlFactory;
+import ca.dioo.java.libmotqueser.MessageFactory;
+import ca.dioo.java.libmotqueser.MalformedMessageException;
 
 
 class ControlThread extends Thread {
