@@ -101,12 +101,12 @@ class ItemQueue {
 	}
 
 
-	public static boolean add(Item item) throws IllegalArgumentException, IOException {
+	public static boolean add(Item item) throws IOException {
 		return add(item, (new GregorianCalendar()).getTimeInMillis());
 	}
 
 
-	public static boolean add(Item item, long timestamp) throws IllegalArgumentException, IOException {
+	public static boolean add(Item item, long timestamp) throws IOException {
 		boolean ret = false;
 		long curTs = timestamp;
 
