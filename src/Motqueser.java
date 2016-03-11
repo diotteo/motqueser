@@ -248,15 +248,9 @@ class Motqueser {
 			while (true) {
 				Socket sock = servSock.accept();
 
-				if (sock.getInetAddress().getHostAddress().equals("127.0.0.1")) {
-					System.out.println("control connection detected");
-					ControlThread ct = new ControlThread(sock);
-					ct.start();
-				} else {
-					Utils.debugPrintln(2, "Starting new thread...");
-					ServerThread st = new ServerThread(sock);
-					st.start();
-				}
+				Utils.debugPrintln(2, "Starting new thread...");
+				ServerThread st = new ServerThread(sock);
+				st.start();
 			}
 		} catch (IOException e) {
 			System.err.println("Exception listening on port " + Config.port + "\n" + e.getMessage());
