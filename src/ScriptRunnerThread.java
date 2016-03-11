@@ -49,7 +49,7 @@ class ScriptRunnerThread extends Thread {
 						InputStream is = p.getInputStream();
 						int nb;
 						while ((nb = is.read(b)) > -1) {
-							System.out.write(b, 0, nb); 
+							System.out.write(b, 0, nb);
 						}
 					}
 

@@ -181,7 +181,9 @@ class Motqueser {
 
 			if (msg instanceof ControlMessage) {
 				String result = in.readLine();
-				if (!result.equals("success")) {
+				if (result == null) {
+					System.out.println("Connection closed unexpectedly");
+				} else if (!result.equals("success")) {
 					System.err.println(result);
 					System.exit(2);
 				}
