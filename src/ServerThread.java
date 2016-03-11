@@ -11,6 +11,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.PrintWriter;
+import java.io.PushbackInputStream;
 
 import ca.dioo.java.libmotqueser.XmlFactory;
 import ca.dioo.java.libmotqueser.MessageFactory;
@@ -26,8 +27,9 @@ class ServerThread extends Thread {
 
 	private Socket sock;
 	private BufferedOutputStream os;
-	private PrintWriter wtr;
 	private BufferedInputStream is;
+	private PushbackInputStream pis;
+	private PrintWriter wtr;
 	private BufferedReader rdr;
 
 	public ServerThread(Socket socket) {
@@ -35,7 +37,8 @@ class ServerThread extends Thread {
 
 		try {
 			os = new BufferedOutputStream(sock.getOutputStream());
-			is = new BufferedInputStream(sock.getInputStream());
+			pis = new PushbackInputStream(sock.getInputStream());
+			is = new BufferedInputStream(pis);
 			wtr = new PrintWriter(os, true);
 			rdr = new BufferedReader(new InputStreamReader(is));
 		} catch (IOException e) {
@@ -46,7 +49,9 @@ class ServerThread extends Thread {
 
 	public void run() {
 		try {
-			END: while (!sock.isClosed()) {
+			int b;
+			END: while (!sock.isClosed() && (b = pis.read()) > -1) {
+				pis.unread(b);
 				Message m = MessageFactory.parse(XmlFactory.newXmlParser(rdr));
 
 				if (m instanceof ClientMessage) {
