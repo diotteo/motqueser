@@ -30,6 +30,8 @@ dist: jar
 	cp $(PRGM).sh dist/$(PRGM)/
 	cp $(PRGM).conf.sample dist/$(PRGM)/
 	cd dist/ && tar -cf $(PRGM).tar $(PRGM)/
+	mv dist/$(PRGM).tar $(ROOT_DIR)
+	rm -rv dist
 
 
 .PHONY: jar
