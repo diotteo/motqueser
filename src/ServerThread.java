@@ -92,22 +92,34 @@ class ServerThread extends Thread {
 
 
 	private void processControlMessage(ControlMessage cm) throws IOException {
-		StringBuffer sb = new StringBuffer();
-		sb.append("Control Message:");
-		for (ControlMessage.Item it: cm) {
-			sb.append(" Item: " + it.getId());
-			if (ItemQueue.isSnoozed()) {
-				Utils.debugPrintln(2, "Snoozed, deleting media files for " + it.getId());
+		int id = -1;
 
-				//FIXME: delete media? maybe add a configuration parameter to control this?
-				Utils.deleteById(it.getId());
-			} else {
-				ItemQueue.add(new Item(it.getId()));
+		try {
+			StringBuffer sb = new StringBuffer();
+			sb.append("Control Message:");
+			for (ControlMessage.Item it: cm) {
+				sb.append(" Item: " + it.getId());
+				if (ItemQueue.isSnoozed()) {
+					Utils.debugPrintln(2, "Snoozed, deleting media files for " + it.getId());
+
+					//FIXME: delete media? maybe add a configuration parameter to control this?
+					Utils.deleteById(it.getId());
+				} else {
+					id = it.getId();
+					ItemQueue.add(new Item(id));
+				}
 			}
+			System.out.println(sb.toString());
+			//FIXME: fine-grained response
+			wtr.println("success");
+
+		//FIXME: fine-grained logging if not response
+		} catch (IllegalArgumentException e) {
+			String errMsg = "Forbidden add request for ID " + id;
+			ErrorMessage em = new ErrorMessage(errMsg);
+			System.err.println(errMsg);
+			wtr.println(em.getXmlString());
 		}
-		System.out.println(sb.toString());
-		//FIXME: fine-grained response
-		wtr.println("success");
 	}
 
 
