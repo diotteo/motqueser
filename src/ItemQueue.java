@@ -21,14 +21,24 @@ class ItemQueue {
 
 	private static class ItemWrapper extends Item {
 		private long ts;
+		private boolean hidden;
 
 		ItemWrapper(Item it) throws IOException {
 			super(it.getId());
 			ts = (new Date()).getTime();
+			hidden = false;
 		}
 
 		long getTimestamp() {
 			return ts;
+		}
+
+		boolean isHidden() {
+			return hidden;
+		}
+
+		void hide() {
+			hidden = true;
 		}
 	}
 
@@ -119,7 +129,11 @@ class ItemQueue {
 			} else if (item.getId() < minId) {
 				throw new IllegalArgumentException("id too small: " + item.getId() + " < " + minId);
 			} else if (itemQueue.containsKey(item.getId())) {
-				throw new IllegalArgumentException("id " + item.getId() + " already exists");
+				if (itemQueue.get(item.getId()).isHidden()) {
+					throw new IllegalArgumentException("id " + item.getId() + " previously added");
+				} else {
+					throw new IllegalArgumentException("id " + item.getId() + " already exists");
+				}
 			} else {
 				ItemWrapper iw = new ItemWrapper(item);
 				ItemWrapper tmp = itemQueue.put(iw.getId(), iw);
@@ -138,8 +152,9 @@ class ItemQueue {
 
 		lock.lock();
 		try {
-			Item it = itemQueue.remove(itemId);
-			if (null != it) {
+			ItemWrapper it = itemQueue.get(itemId);
+			if (null != it && !it.isHidden()) {
+				it.hide();
 				wasRemoved = true;
 			}
 		} finally {
@@ -152,12 +167,13 @@ class ItemQueue {
 
 	public static boolean keep(int itemId) {
 		boolean wasRemoved = false;
-		Item it;
+		ItemWrapper it;
 
 		lock.lock();
 		try {
-			it = itemQueue.remove(itemId);
-			if (null != it) {
+			it = itemQueue.get(itemId);
+			if (null != it && !it.isHidden()) {
+				it.hide();
 				wasRemoved = true;
 			}
 		} finally {
@@ -213,6 +229,8 @@ class ItemQueue {
 				 */
 				} else if (itwpr.getId() == itemId) {
 					itemList.clear();
+				} else if (itwpr.isHidden()) {
+					//Pass
 				} else {
 					itemList.add(itwpr);
 					lastId = id;
