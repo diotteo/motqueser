@@ -1,3 +1,5 @@
+VERSION := 0.0
+
 JAVA ?= java
 JAVA_ARGS ?= #-agentlib:jdwp=transport=dt_socket,server=y,suspend=n
 JAVAC ?= javac
@@ -29,8 +31,9 @@ dist: jar
 	cp $(PRGM).jar libs/*.jar dist/$(PRGM)/
 	cp $(PRGM).sh dist/$(PRGM)/
 	cp $(PRGM).conf.sample dist/$(PRGM)/
-	cd dist/ && tar -cf $(PRGM).tar $(PRGM)/
-	mv dist/$(PRGM).tar $(ROOT_DIR)
+	cd dist/ && tar -cf $(PRGM)-$(VERSION).tar $(PRGM)/
+	cd dist/ && bzip2 -f $(PRGM)-$(VERSION).tar
+	mv dist/$(PRGM)-$(VERSION).tar.bz2 $(ROOT_DIR)
 	rm -rv dist
 
 
