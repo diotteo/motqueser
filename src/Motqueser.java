@@ -73,12 +73,11 @@ class Motqueser {
 				new LongOpt("port",     LongOpt.REQUIRED_ARGUMENT, null, 'p'),
 				new LongOpt("client",   LongOpt.REQUIRED_ARGUMENT, null, 'c'),
 				new LongOpt("version",  LongOpt.REQUIRED_ARGUMENT, null, 'V'),
-				//FIXME: OPTIONAL_ARGUMENT doesn't appear to actually parse arguments...
-				new LongOpt("debug",    LongOpt.REQUIRED_ARGUMENT, null, 'd'),
+				new LongOpt("debug",    LongOpt.OPTIONAL_ARGUMENT, null, 'd'),
 				new LongOpt("delete",   LongOpt.NO_ARGUMENT,       null, 'z'),
 		};
 
-		Getopt g = new Getopt(PRGM, args, "c:d:hp:Vz", longopts);
+		Getopt g = new Getopt(PRGM, args, "c:d::hp:Vz", longopts);
 
 		int o;
 		while ((o = g.getopt()) != -1) {
@@ -90,13 +89,12 @@ class Motqueser {
 				reqType = ClientReqType.NEW_ITEM;
 				break;
 			case 'd':
-				Utils.dbgLvl++;
 				try {
 					String arg = g.getOptarg();
 					if (arg != null) {
-						Utils.dbgLvl = new Integer(arg);
+						Utils.dbgLvl = Integer.parseInt(arg);
 					} else {
-						throw new Error("java-getopt is bugged, sorry");
+						Utils.dbgLvl++;
 					}
 				} catch (NumberFormatException e) {
 					System.err.println((char)g.getOptopt() + ": invalid argument: must be an integer\n");
