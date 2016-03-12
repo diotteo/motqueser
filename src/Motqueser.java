@@ -34,7 +34,10 @@ enum ClientReqType {
 class Motqueser {
 	private static final Class THIS_CLASS = Motqueser.class;
 	public static final String PRGM = THIS_CLASS.getSimpleName();
-	private static final String VERSION = "0.1";
+	/* FIXME: this should probably be replaced by the actual value
+	 * in Makefile or git tag
+	 */
+	private static final String VERSION = "0.0";
 
 	private static NetConMode mode = NetConMode.SERVER;
 	private static int itemId = -1;
@@ -240,7 +243,7 @@ class Motqueser {
 	public static void executeAsServer() {
 		try {
 			ServerSocket servSock = new ServerSocket(Config.port);
-			System.out.println("Starting " + PRGM + " listening on port " + servSock.getLocalPort());
+			System.out.println("Starting " + PRGM + " version " + VERSION + " listening on port " + servSock.getLocalPort());
 
 			DisplayThread dt = new DisplayThread();
 			ScriptRunnerThread srt = new ScriptRunnerThread();
