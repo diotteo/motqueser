@@ -161,7 +161,7 @@ class ServerThread extends Thread {
 		ItemQueue.ItemBundle ib = ItemQueue.getItems(il.getPrevId());
 		if (ib != null) {
 			for (Item it: ib) {
-				il.add(new ServerMessage.Item(it.getId()));
+				il.add(new ServerMessage.Item(it.getId(), it.getVidLen()));
 			}
 		}
 		wtr.println(sm.getXmlString());

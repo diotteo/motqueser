@@ -1,5 +1,7 @@
 package ca.dioo.java.motqueser;
 
+import java.io.File;
+import java.io.InputStreamReader;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -8,15 +10,40 @@ import java.nio.file.Files;
 import java.nio.file.FileSystems;
 import java.nio.file.DirectoryStream;
 import java.util.ArrayList;
-import java.io.File;
 
 public class Utils {
 	public static int dbgLvl = 0;
+	public static Runtime rt = Runtime.getRuntime();
 
 	public static void debugPrintln(int minLvl, String msg) {
 		if (dbgLvl >= minLvl) {
 			System.out.println(msg);
 		}
+	}
+
+
+	public static String getVidLen(Path vidPath) {
+		String vidLen = null;
+
+		try {
+			Process p = rt.exec("avprobe " + vidPath.toString());
+			BufferedReader br = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+
+			String s;
+			while (null != (s = br.readLine())) {
+				if (s.contains("Duration")) {
+					String[] a = s.split("\\s|\\.");
+					if (a.length > 3) {
+						vidLen = a[3];
+					}
+					break;
+				}
+			}
+		} catch (IOException e) {
+			throw new Error(e.getMessage(), e);
+		}
+
+		return vidLen;
 	}
 
 
