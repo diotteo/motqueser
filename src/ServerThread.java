@@ -100,7 +100,7 @@ class ServerThread extends Thread {
 			for (ControlMessage.Item it: cm) {
 				sb.append(" Item: " + it.getId());
 				if (ItemQueue.isSnoozed()) {
-					Utils.debugPrintln(2, "Snoozed, deleting media files for " + it.getId());
+					Utils.debugPrintln(1, "Snoozed, deleting media files for " + it.getId());
 
 					//FIXME: delete media? maybe add a configuration parameter to control this?
 					Utils.deleteById(it.getId());
@@ -126,7 +126,7 @@ class ServerThread extends Thread {
 	private void processClientMessage(ClientMessage cm)
 			throws UnsupportedOperationException, IOException {
 
-		Utils.debugPrintln(1, "Client Message:" + cm);
+		Utils.debugPrintln(3, "Client Message:" + cm);
 
 		ServerMessage sm = new ServerMessage(cm.getVersion());
 		sm.buildAsResponse(cm);
@@ -153,7 +153,7 @@ class ServerThread extends Thread {
 		} else {
 			throw new UnsupportedOperationException("Unimplemented response: " + resp.getClass().getName());
 		}
-		Utils.debugPrintln(1, "Server Message: " + sm);
+		Utils.debugPrintln(3, "Server Message: " + sm);
 	}
 
 
@@ -247,14 +247,14 @@ System.out.println("file \"" + mediaPath.toString() + "\" is " + fileLen + " byt
 	private void processSnoozeRequest(ServerMessage.SnoozeResponse sr, ServerMessage sm) {
 		int interval = sr.getSnoozeInterval();
 
-		System.err.println("snoozing for " + (interval / 60) + " minutes");
+		Utils.debugPrintln(1, "snoozing for " + (interval / 60) + " minutes");
 		ItemQueue.snoozeFor(interval);
 		wtr.println(sm.getXmlString());
 	}
 
 
 	private void processUnsnoozeRequest(ServerMessage.UnsnoozeResponse ur, ServerMessage sm) {
-		System.err.println("Unsnoozing");
+		Utils.debugPrintln(1, "Unsnoozing");
 		ItemQueue.unsnooze();
 		wtr.println(sm.getXmlString());
 	}
