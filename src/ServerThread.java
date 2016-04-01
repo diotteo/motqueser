@@ -246,12 +246,15 @@ System.out.println("file \"" + mediaPath.toString() + "\" is " + fileLen + " byt
 
 	private void processSnoozeRequest(ServerMessage.SnoozeResponse sr, ServerMessage sm) {
 		int interval = sr.getSnoozeInterval();
+
+		System.err.println("snoozing for " + (interval / 60) + " minutes");
 		ItemQueue.snoozeFor(interval);
 		wtr.println(sm.getXmlString());
 	}
 
 
 	private void processUnsnoozeRequest(ServerMessage.UnsnoozeResponse ur, ServerMessage sm) {
+		System.err.println("Unsnoozing");
 		ItemQueue.unsnooze();
 		wtr.println(sm.getXmlString());
 	}
