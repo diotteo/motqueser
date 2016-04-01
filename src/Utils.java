@@ -51,10 +51,14 @@ public class Utils {
 		boolean wasDeleted = false;
 
 		try {
-			DirectoryStream<Path> ds = Files.newDirectoryStream(Config.getMediaDir(),
-					Config.getDeletePrefix() + itemId + Config.getDeleteSuffix());
+			String glob = Config.getDeletePrefix();
+			if (itemId < 10) {
+				glob += "0";
+			}
+			glob += itemId + Config.getDeleteSuffix();
+			DirectoryStream<Path> ds = Files.newDirectoryStream(Config.getMediaDir(), glob);
 
-			debugPrintln(3, "dir = " + Config.getMediaDir() + " glob = " + Config.getDeletePrefix() + itemId + Config.getDeleteSuffix());
+			debugPrintln(3, "dir = " + Config.getMediaDir() + " glob = " + glob);
 			for (Path p: ds) {
 				debugPrintln(2, p.toString());
 
@@ -73,8 +77,12 @@ public class Utils {
 		Path itemPath = null;
 
 		try {
+			String glob = itemId + "-*.avi";
+			if (itemId < 10) {
+				glob = "0" + glob;
+			}
 			DirectoryStream<Path> ds = Files.newDirectoryStream(Config.getMediaDir(),
-					itemId + "-*.avi");
+					glob);
 
 			for (Path p: ds) {
 				if (itemPath != null) {
@@ -95,7 +103,11 @@ public class Utils {
 		Path itemPath = null;
 
 		try {
-			DirectoryStream<Path> ds = Files.newDirectoryStream(Config.getMediaDir(), itemId + "-*.jpg");
+			String glob = itemId + "-*.jpg";
+			if (itemId < 10) {
+				glob = "0" + glob;
+			}
+			DirectoryStream<Path> ds = Files.newDirectoryStream(Config.getMediaDir(), glob);
 
 			ArrayList<Path> al = new ArrayList<Path>();
 			for (Path p: ds) {
