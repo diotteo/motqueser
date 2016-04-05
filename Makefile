@@ -49,10 +49,6 @@ $(PRGM).jar: $(objects)
 all: $(objects)
 
 
-$(objects): $(BPATH)/%.class: src/%.java $(libs) $(BUILD_DIR)
-	$(JAVAC) $(JAVAC_ARGS) -cp libs/*:$(BUILD_DIR) -d $(BUILD_DIR) $<
-
-
 .PHONY: run
 run: $(objects)
 	$(JAVA) $(JAVA_ARGS) -cp libs/*:$(BUILD_DIR) $(subst /,.,$(PKG)/$(PRGM)) $(ARGS)
@@ -91,9 +87,21 @@ $(libs) $(test_libs):
 	$(MAKE) -C $(dir $(shell readlink $@)) jar
 
 
-$(patsubst %,$(BPATH)/%.class,ServerThread): $(patsubst %,$(BPATH)/%.class,ItemQueue Utils)
-$(BPATH)/Item.class: $(patsubst %,$(BPATH)/%.class,Utils)
-$(BPATH)/Utils.class: $(patsubst %,$(BPATH)/%.class,Config)
+#Circular dependencies
+item_objects := $(patsubst %,$(BPATH)/%.class,Item Utils)
+objects := $(filter-out $(item_objects),$(objects))
+
+$(item_objects) : $(patsubst %,src/%.java,Item Utils)
+	$(JAVAC) $(JAVAC_ARGS) -cp libs/*:$(BUILD_DIR) -d $(BUILD_DIR) $(patsubst %,src/%.java,Item Utils)
+
+
+$(objects): $(BPATH)/%.class: src/%.java $(libs) $(BUILD_DIR)
+	$(JAVAC) $(JAVAC_ARGS) -cp libs/*:$(BUILD_DIR) -d $(BUILD_DIR) $<
+
+
+$(item_objects): $(patsubst %,$(BPATH)/%.class,Config)
+
+$(BPATH)ServerThread.class: $(patsubst %,$(BPATH)/%.class,ItemQueue Utils)
 $(BPATH)/ScriptRunnerThread.class: $(patsubst %,$(BPATH)/%.class,Config Utils Item)
 $(BPATH)/ItemQueue.class: $(patsubst %,$(BPATH)/%.class,Item ScriptRunnerThread)
 $(BPATH)/DisplayThread.class: $(patsubst %,$(BPATH)/%.class,ItemQueue)
