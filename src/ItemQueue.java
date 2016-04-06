@@ -218,7 +218,7 @@ class ItemQueue {
 	public static synchronized ItemBundle getItems(int itemId) {
 		GregorianCalendar cl = new GregorianCalendar();
 		cl.add(Calendar.SECOND, -Config.getDelay());
-		long minTs = cl.getTimeInMillis();
+		long minTs = cl.getTimeInMillis() / 1000;
 		int lastId = -1;
 		ItemBundle ib = null;
 		ArrayList<ItemWithId> itemList = new ArrayList<ItemWithId>();
@@ -230,7 +230,6 @@ class ItemQueue {
 			entry = i.next();
 			ItemWrapper itwpr = entry.getValue();
 			int id = itwpr.getId();
-
 			if (itwpr.getTimestamp() < minTs) {
 				if (id > minId) {
 					minId = id + 1;
