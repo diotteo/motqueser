@@ -101,8 +101,8 @@ $(objects): $(BPATH)/%.class: src/%.java $(libs) $(BUILD_DIR)
 
 $(item_objects): $(patsubst %,$(BPATH)/%.class,Config)
 
-$(BPATH)ServerThread.class: $(patsubst %,$(BPATH)/%.class,ItemQueue Utils)
+$(BPATH)/ServerThread.class: $(patsubst %,$(BPATH)/%.class,ItemQueue Utils ItemNotFoundException)
 $(BPATH)/ScriptRunnerThread.class: $(patsubst %,$(BPATH)/%.class,Config Utils Item)
-$(BPATH)/ItemQueue.class: $(patsubst %,$(BPATH)/%.class,Item ScriptRunnerThread)
+$(BPATH)/ItemQueue.class: $(patsubst %,$(BPATH)/%.class,Item ScriptRunnerThread ItemNotFoundException)
 $(BPATH)/DisplayThread.class: $(patsubst %,$(BPATH)/%.class,ItemQueue)
 $(BPATH)/Motqueser.class: $(patsubst %,$(BPATH)/%.class,ServerThread Utils)
