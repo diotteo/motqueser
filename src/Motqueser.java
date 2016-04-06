@@ -7,6 +7,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.InputStreamReader;
@@ -40,7 +41,7 @@ class Motqueser {
 	private static final String VERSION = "0.0";
 
 	private static NetConMode mode = NetConMode.SERVER;
-	private static int itemId = -1;
+	private static String itemId = null;
 	private static ClientReqType reqType = ClientReqType.INVALID;
 
 
@@ -84,9 +85,24 @@ class Motqueser {
 			char c = (char)o;
 			switch (o) {
 			case 'c':
-				itemId = new Integer(g.getOptarg());
-				mode = NetConMode.CLIENT;
-				reqType = ClientReqType.NEW_ITEM;
+				{
+					/* Allows us to accept everything between
+					 * /path/to/1234-20001129144023.avi and 1234-20001129144023
+					 */
+					String s = new File(g.getOptarg()).getName();
+					String a[] = s.split("-|[^[:digit:]]");
+					if (a.length == 2) {
+						itemId = a[0] + "-" + a[1];
+					} else if (a.length == 1) {
+						itemId = Utils.findEventByIndex(Integer.parseInt(a[0]));
+					} else {
+						System.err.println((char)g.getOptopt() + ": invalid argument format\n");
+						printHelp(1);
+					}
+
+					mode = NetConMode.CLIENT;
+					reqType = ClientReqType.NEW_ITEM;
+				}
 				break;
 			case 'd':
 				try {
@@ -146,8 +162,8 @@ class Motqueser {
 			if (Config.port == 0) {
 				System.err.println("Error: port must be specified in client mode\n");
 				printHelp(1);
-			} else if (itemId < 0) {
-				System.err.println("Error: event ID must be specified and >= 0 in client mode\n");
+			} else if (itemId == null) {
+				System.err.println("Error: event ID must be specified in client mode\n");
 				printHelp(1);
 			}
 		} else if (reqType != ClientReqType.INVALID) {
@@ -165,8 +181,9 @@ class Motqueser {
 
 		switch (reqType) {
 		case DEL_ITEM:
-			msg = prepareClientMessage(itemId);
-			break;
+			throw new UnsupportedOperationException("functionality removed");
+			//msg = prepareClientMessage(itemId);
+			//break;
 		case NEW_ITEM:
 			msg = prepareControlMessage(itemId);
 			break;
@@ -208,17 +225,12 @@ class Motqueser {
 	}
 
 
-	private static Message prepareControlMessage(int itemId) {
+	private static Message prepareControlMessage(String itemId) {
 		Path itemPath = null;
 		try {
-			itemPath = Utils.getVideoPathFromId(itemId);
+			itemPath = Utils.getVideoPathFromItem(Utils.getItemFromString(itemId));
 		} catch (IOException e) {
-			System.err.println(e.getMessage());
-			System.exit(2);
-		}
-
-		if (itemPath == null) {
-			System.err.println("No file matched filter for item id " + itemId);
+			System.err.println("No file matched filter for item id " + itemId + ":" + e.getMessage());
 			System.exit(2);
 		}
 
@@ -230,12 +242,13 @@ class Motqueser {
 	}
 
 
-	private static Message prepareClientMessage(int itemId) {
-		ClientMessage cm = new ClientMessage();
-		ClientMessage.ItemDeletionRequest req = new ClientMessage.ItemDeletionRequest(itemId);
-		cm.add(req);
-		return cm;
-	}
+	//private static Message prepareClientMessage(String itemId) {
+	//	ClientMessage cm = new ClientMessage();
+	//	Item it = Utils.getItemFromString(itemId);
+	//	ClientMessage.ItemDeletionRequest req = new ClientMessage.ItemDeletionRequest(ItemQueue.get());
+	//	cm.add(req);
+	//	return cm;
+	//}
 
 
 	public static void executeAsServer() {

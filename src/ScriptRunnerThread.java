@@ -40,7 +40,7 @@ class ScriptRunnerThread extends Thread {
 		EXIT: while (true) {
 			while ((it = queue.poll()) != null) {
 				try {
-					String cmd = Config.getScript() + " " + it.getPath();
+					String cmd = Config.getScript() + " " + it.getVidPath();
 					Process p = rt.exec(cmd);
 
 					if (Utils.dbgLvl >= 3) {

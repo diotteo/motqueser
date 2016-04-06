@@ -10,6 +10,8 @@ import java.nio.file.Files;
 import java.nio.file.FileSystems;
 import java.nio.file.DirectoryStream;
 import java.util.ArrayList;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
 
 public class Utils {
 	public static int dbgLvl = 0;
@@ -19,6 +21,51 @@ public class Utils {
 		if (dbgLvl >= minLvl) {
 			System.out.println(msg);
 		}
+	}
+
+
+	public static String findEventByIndex(int idx) {
+		String eventStr = null;
+
+		try {
+			String glob = idx + "-*.avi";
+			DirectoryStream<Path> ds = Files.newDirectoryStream(Config.getMediaDir(),
+					idx + "-*.avi");
+
+			Path eventPath = null;
+			for (Path p: ds) {
+				if (eventPath != null) {
+					throw new Error("Too many videos match " + glob);
+				} else {
+					eventPath = p;
+				}
+			}
+			if (eventPath == null) {
+				throw new Error("No match for " + glob);
+			}
+			String s = eventPath.getFileName().toString();
+			eventStr = s.substring(0, s.indexOf("."));
+		} catch (IOException|StringIndexOutOfBoundsException e) {
+			throw new Error("Error matching file:" + e.getMessage(), e);
+		}
+		return eventStr;
+	}
+
+
+	public static Item getItemFromString(String id) throws IOException {
+		//FIXME: motion-specific rule
+		int idx = -1;
+		long timestamp = -1;
+		try {
+			String a[] = id.split("-");
+			idx = Integer.parseInt(a[0]);
+			timestamp = new SimpleDateFormat("yyyyMMddkkmmss").parse(a[1]).getTime() / 1000;
+		} catch (ParseException|NumberFormatException e) {
+			throw new Error("something went wrong parsing ControlMessage id", e);
+		}
+		Item it = new Item(idx, timestamp);
+
+		return it;
 	}
 
 
@@ -47,15 +94,12 @@ public class Utils {
 	}
 
 
-	public static boolean deleteById(int itemId) {
+	public static boolean deleteByItem(Item it) {
 		boolean wasDeleted = false;
 
 		try {
 			String glob = Config.getDeletePrefix();
-			if (itemId < 10) {
-				glob += "0";
-			}
-			glob += itemId + Config.getDeleteSuffix();
+			glob += getGlobFromItem(it, null) + Config.getDeleteSuffix();
 			DirectoryStream<Path> ds = Files.newDirectoryStream(Config.getMediaDir(), glob);
 
 			debugPrintln(3, "dir = " + Config.getMediaDir() + " glob = " + glob);
@@ -73,14 +117,25 @@ public class Utils {
 	}
 
 
-	public static Path getVideoPathFromId(int itemId) throws IOException {
+	private static String getGlobFromItem(Item it, String ext) {
+		String glob = it.getEventId() + "*";
+		if (ext != null) {
+			glob += "." + ext;
+		}
+
+		if (it.getIdx() < 10) {
+			glob = "0" + glob;
+		}
+
+		return glob;
+	}
+
+
+	public static Path getVideoPathFromItem(Item it) throws IOException {
 		Path itemPath = null;
 
 		try {
-			String glob = itemId + "-*.avi";
-			if (itemId < 10) {
-				glob = "0" + glob;
-			}
+			String glob = getGlobFromItem(it, "avi");
 			DirectoryStream<Path> ds = Files.newDirectoryStream(Config.getMediaDir(),
 					glob);
 
@@ -99,14 +154,11 @@ public class Utils {
 	}
 
 
-	public static Path getImagePathFromId(int itemId) throws IOException {
+	public static Path getImagePathFromItem(Item it) throws IOException {
 		Path itemPath = null;
 
 		try {
-			String glob = itemId + "-*.jpg";
-			if (itemId < 10) {
-				glob = "0" + glob;
-			}
+			String glob = getGlobFromItem(it, "jpg");
 			DirectoryStream<Path> ds = Files.newDirectoryStream(Config.getMediaDir(), glob);
 
 			ArrayList<Path> al = new ArrayList<Path>();

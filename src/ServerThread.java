@@ -97,16 +97,18 @@ class ServerThread extends Thread {
 		try {
 			StringBuffer sb = new StringBuffer();
 			sb.append("Control Message:");
-			for (ControlMessage.Item it: cm) {
-				sb.append(" Item: " + it.getId());
+			for (ControlMessage.Item cmit: cm) {
+				sb.append(" Item: " + cmit.getId());
+
+				Item it = Utils.getItemFromString(cmit.getId());
+
 				if (ItemQueue.isSnoozed()) {
-					Utils.debugPrintln(1, "Snoozed, deleting media files for " + it.getId());
+					Utils.debugPrintln(1, "Snoozed, deleting media files for " + cmit.getId());
 
 					//FIXME: delete media? maybe add a configuration parameter to control this?
-					Utils.deleteById(it.getId());
+					Utils.deleteByItem(it);
 				} else {
-					id = it.getId();
-					ItemQueue.add(new Item(id));
+					ItemQueue.add(it);
 				}
 			}
 			System.out.println(sb.toString());
@@ -160,37 +162,40 @@ class ServerThread extends Thread {
 	private void processItemListRequest(ServerMessage.ItemListResponse il, ServerMessage sm) {
 		ItemQueue.ItemBundle ib = ItemQueue.getItems(il.getPrevId());
 		if (ib != null) {
-			for (Item it: ib) {
-				il.add(new ServerMessage.Item(it.getId(), it.getVidLen()));
+			for (ItemQueue.ItemWithId it: ib) {
+				try {
+					il.add(new ServerMessage.Item(it.getId(), it.getImgSize(), it.getVidSize(), it.getVidLen()));
+				} catch (IOException e) {
+					throw new Error("problem determining media size", e);
+				}
 			}
 		}
 		wtr.println(sm.getXmlString());
 	}
 
 
-	private void processItemRequest(ServerMessage.ItemResponse it, ServerMessage sm)
+	private void processItemRequest(ServerMessage.ItemResponse smit, ServerMessage sm)
 			throws UnsupportedOperationException, IOException {
 
-		Path mediaPath;
-		switch (it.getMediaType()) {
-		case VID:
-			mediaPath = Utils.getVideoPathFromId(it.getId());
-			break;
-		case IMG:
-			mediaPath = Utils.getImagePathFromId(it.getId());
-			break;
-		default:
-			throw new UnsupportedOperationException("Unknown media type: " + it.getMediaType());
-		}
+		Path mediaPath = null;
+		try {
+			switch (smit.getMediaType()) {
+			case VID:
+				{
+					Item it = ItemQueue.get(smit.getId());
+					mediaPath = it.getVidPath();
+				}
+				break;
+			case IMG:
+				{
+					Item it = ItemQueue.get(smit.getId());
+					mediaPath = it.getImgPath();
+				}
+				break;
+			default:
+				throw new UnsupportedOperationException("Unknown media type: " + smit.getMediaType());
+			}
 
-		if (mediaPath == null) {
-			String errMsg = "No file matching filter for id " + it.getId();
-			System.err.println(errMsg);
-
-			ErrorMessage em = new ErrorMessage(errMsg);
-			wtr.println(em.getXmlString());
-
-		} else {
 			File mediaFile = new File(mediaPath.toString());
 
 			//FIXME: should improve this eventually
@@ -202,13 +207,19 @@ class ServerThread extends Thread {
 System.out.println("file \"" + mediaPath.toString() + "\" is " + fileLen + " bytes long");
 				int len = (new FileInputStream(mediaFile)).read(fileContent);
 
-				it.setMediaSize(len);
+				smit.setMediaSize(len);
 				wtr.println(sm.getXmlString());
 				wtr.flush();
 				os.write(new byte[]{(byte)0xEE, (byte)0x00, (byte)0xFF}, 0, 3);
 				os.write(fileContent, 0, fileContent.length);
 				os.flush();
 			}
+		} catch (ItemNotFoundException e) {
+			String errMsg = "No file matching filter for id " + smit.getId();
+			System.err.println(errMsg);
+
+			ErrorMessage em = new ErrorMessage(errMsg);
+			wtr.println(em.getXmlString());
 		}
 	}
 
@@ -222,9 +233,13 @@ System.out.println("file \"" + mediaPath.toString() + "\" is " + fileLen + " byt
 			wtr.println(em.getXmlString());
 
 		} else {
-			System.err.println("Deleting item id " + idr.getId());
-			Utils.deleteById(idr.getId());
-			wtr.println(sm.getXmlString());
+			try {
+				System.err.println("Deleting item id " + idr.getId());
+				Utils.deleteByItem(ItemQueue.get(idr.getId()));
+				wtr.println(sm.getXmlString());
+			} catch (ItemNotFoundException e) {
+				throw new Error("Error", e);
+			}
 		}
 	}
 

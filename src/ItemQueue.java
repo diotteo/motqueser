@@ -1,12 +1,12 @@
 package ca.dioo.java.motqueser;
 
 import java.util.LinkedHashMap;
+import java.util.Hashtable;
 import java.util.Set;
 import java.util.Map;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Calendar;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.Collection;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -14,23 +14,18 @@ import java.io.IOException;
 
 class ItemQueue {
 	private static LinkedHashMap<Integer, ItemWrapper> itemQueue = new LinkedHashMap<Integer, ItemWrapper>();
-	private static ReentrantLock lock = new ReentrantLock();
+	private static Map<String, ItemWrapper> indexMap = new Hashtable<String, ItemWrapper>();
 	private static int minId = 0;
+	private static int nextId = 0;
 	private static long snoozeUntilTs = -1;
 
 
-	private static class ItemWrapper extends Item {
-		private long ts;
+	private static class ItemWrapper extends ItemWithId {
 		private boolean hidden;
 
 		ItemWrapper(Item it) throws IOException {
-			super(it.getId());
-			ts = (new Date()).getTime();
+			super(it);
 			hidden = false;
-		}
-
-		long getTimestamp() {
-			return ts;
 		}
 
 		boolean isHidden() {
@@ -43,18 +38,34 @@ class ItemQueue {
 	}
 
 
-	static class ItemBundle implements Iterable<Item> {
-		private int lastId;
-		private ArrayList<Item> itemList;
+	public static class ItemWithId extends Item {
+		private int id;
 
-		ItemBundle(Collection<Item> itemList, int lastId) {
-			this.itemList = new ArrayList<Item>(itemList);
+		ItemWithId(Item it) throws IOException {
+			super(it);
+			synchronized (ItemQueue.class) {
+				id = nextId++;
+			}
+		}
+
+		int getId() {
+			return id;
+		}
+	}
+
+
+	static class ItemBundle implements Iterable<ItemWithId> {
+		private int lastId;
+		private ArrayList<ItemWithId> itemList;
+
+		ItemBundle(Collection<ItemWithId> itemList, int lastId) {
+			this.itemList = new ArrayList<ItemWithId>(itemList);
 			this.lastId = lastId;
 		}
 
 
-		public Iterator<Item> iterator() {
-			return (Iterator<Item>)itemList.iterator();
+		public Iterator<ItemWithId> iterator() {
+			return (Iterator<ItemWithId>)itemList.iterator();
 		}
 
 
@@ -111,73 +122,78 @@ class ItemQueue {
 	}
 
 
-	public static boolean add(Item item) throws IOException {
+	public static synchronized ItemWithId get(int id) throws ItemNotFoundException {
+		ItemWithId it = itemQueue.get(id);
+		if (it == null) {
+			throw new ItemNotFoundException("no Item for id " + id);
+		}
+		return it;
+	}
+
+
+	public static synchronized ItemWithId getByEventId(String eventId) throws ItemNotFoundException {
+		ItemWithId it = indexMap.get(eventId);
+		if (it == null) {
+			throw new ItemNotFoundException("no Item for eventId " + eventId);
+		}
+		return it;
+	}
+
+
+	public static synchronized boolean add(Item item) throws IOException {
 		return add(item, (new GregorianCalendar()).getTimeInMillis());
 	}
 
 
-	public static boolean add(Item item, long timestamp) throws IOException {
+	public static synchronized boolean add(Item item, long timestamp) throws IOException {
 		boolean ret = false;
 		long curTs = timestamp;
+		String eventId = item.getEventId();
+		ItemWrapper iw_im = indexMap.get(eventId);
 
-		lock.lock();
-		try {
-			Utils.debugPrintln(4, "cur:" + curTs + " snooze:" + snoozeUntilTs);
-			if (isSnoozed(curTs)) {
-				Utils.debugPrintln(4, "snoozed");
-				return false;
-			} else if (item.getId() < minId) {
-				throw new IllegalArgumentException("id too small: " + item.getId() + " < " + minId);
-			} else if (itemQueue.containsKey(item.getId())) {
-				if (itemQueue.get(item.getId()).isHidden()) {
-					throw new IllegalArgumentException("id " + item.getId() + " previously added");
-				} else {
-					throw new IllegalArgumentException("id " + item.getId() + " already exists");
-				}
+		Utils.debugPrintln(4, "cur:" + curTs + " snooze:" + snoozeUntilTs);
+		if (isSnoozed(curTs)) {
+			Utils.debugPrintln(4, "snoozed");
+			return false;
+		} else if (iw_im != null) {
+			if (iw_im.isHidden()) {
+				throw new IllegalArgumentException(eventId + " previously added");
 			} else {
-				ItemWrapper iw = new ItemWrapper(item);
-				ItemWrapper tmp = itemQueue.put(iw.getId(), iw);
-				assert (tmp == null);
-				ret = true;
+				throw new IllegalArgumentException(eventId + " already exists");
 			}
-		} finally {
-			lock.unlock();
+		} else {
+			ItemWrapper iw = new ItemWrapper(item);
+			ItemWrapper tmp = itemQueue.put(iw.getId(), iw);
+			assert (tmp == null);
+			tmp = indexMap.put(iw.getEventId(), iw);
+			assert (tmp == null);
+			ret = true;
 		}
 		return ret;
 	}
 
 
-	public static boolean remove(int itemId) {
+	public static synchronized boolean remove(int itemId) {
 		boolean wasRemoved = false;
 
-		lock.lock();
-		try {
-			ItemWrapper it = itemQueue.get(itemId);
-			if (null != it && !it.isHidden()) {
-				it.hide();
-				wasRemoved = true;
-			}
-		} finally {
-			lock.unlock();
+		ItemWrapper it = itemQueue.get(itemId);
+		if (it != null && !it.isHidden()) {
+			it.hide();
+			wasRemoved = true;
 		}
 
 		return wasRemoved;
 	}
 
 
-	public static boolean keep(int itemId) {
+	public static synchronized boolean keep(int itemId) {
 		boolean wasRemoved = false;
 		ItemWrapper it;
 
-		lock.lock();
-		try {
-			it = itemQueue.get(itemId);
-			if (null != it && !it.isHidden()) {
-				it.hide();
-				wasRemoved = true;
-			}
-		} finally {
-			lock.unlock();
+		it = itemQueue.get(itemId);
+		if (it != null && !it.isHidden()) {
+			it.hide();
+			wasRemoved = true;
 		}
 
 		if (wasRemoved) {
@@ -199,49 +215,45 @@ class ItemQueue {
 	 *
 	 * @param: itemId the id of the last seen item or -1 for all item.
 	 */
-	public static ItemBundle getItems(int itemId) {
+	public static synchronized ItemBundle getItems(int itemId) {
 		GregorianCalendar cl = new GregorianCalendar();
 		cl.add(Calendar.SECOND, -Config.getDelay());
 		long minTs = cl.getTimeInMillis();
 		int lastId = -1;
 		ItemBundle ib = null;
-		ArrayList<Item> itemList = new ArrayList<Item>();
+		ArrayList<ItemWithId> itemList = new ArrayList<ItemWithId>();
 
-		lock.lock();
-		try {
-			Set<Map.Entry<Integer, ItemWrapper>> set = itemQueue.entrySet();
-			Map.Entry<Integer, ItemWrapper> entry;
-			Iterator<Map.Entry<Integer, ItemWrapper>> i;
-			for (i = set.iterator(); i.hasNext(); ) {
-				entry = i.next();
-				ItemWrapper itwpr = entry.getValue();
-				int id = itwpr.getId();
+		Set<Map.Entry<Integer, ItemWrapper>> set = itemQueue.entrySet();
+		Map.Entry<Integer, ItemWrapper> entry;
+		Iterator<Map.Entry<Integer, ItemWrapper>> i;
+		for (i = set.iterator(); i.hasNext(); ) {
+			entry = i.next();
+			ItemWrapper itwpr = entry.getValue();
+			int id = itwpr.getId();
 
-				if (itwpr.getTimestamp() < minTs) {
-					if (id > minId) {
-						minId = id + 1;
-					}
-					i.remove();
-					queueForScript(itwpr);
-
-				/* If we find itemId, then all items added so far predate
-				 * what was requested: empty the list.
-				 */
-				} else if (itwpr.getId() == itemId) {
-					itemList.clear();
-				} else if (itwpr.isHidden()) {
-					//Pass
-				} else {
-					itemList.add(itwpr);
-					lastId = id;
+			if (itwpr.getTimestamp() < minTs) {
+				if (id > minId) {
+					minId = id + 1;
 				}
-			}
+				i.remove();
+				indexMap.remove(itwpr.getEventId());
+				queueForScript(itwpr);
 
-			if (itemList.size() > 0) {
-				ib = new ItemBundle(itemList, lastId);
+			/* If we find itemId, then all items added so far predate
+			 * what was requested: empty the list.
+			 */
+			} else if (itwpr.getId() == itemId) {
+				itemList.clear();
+			} else if (itwpr.isHidden()) {
+				//Pass
+			} else {
+				itemList.add(itwpr);
+				lastId = id;
 			}
-		} finally {
-			lock.unlock();
+		}
+
+		if (itemList.size() > 0) {
+			ib = new ItemBundle(itemList, lastId);
 		}
 
 		return ib;
