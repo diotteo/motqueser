@@ -1,4 +1,9 @@
-VERSION := 0.0
+GIT_TAG :=$(shell git describe --tags 2>/dev/null)
+ifeq ($(GIT_TAG),)
+	VERSION := $(shell git log --pretty=format:%h -n 1)
+else
+	VERSION := $(GIT_TAG)
+endif
 
 JAVA ?= java
 JAVA_ARGS ?= #-agentlib:jdwp=transport=dt_socket,server=y,suspend=n
