@@ -1,3 +1,4 @@
+// vim: syntax=java noexpandtab:
 package ca.dioo.java.motqueser;
 
 import gnu.getopt.*;
@@ -35,10 +36,9 @@ enum ClientReqType {
 class Motqueser {
 	private static final Class THIS_CLASS = Motqueser.class;
 	public static final String PRGM = THIS_CLASS.getSimpleName();
-	/* FIXME: this should probably be replaced by the actual value
-	 * in Makefile or git tag
-	 */
-	private static final String VERSION = "0.0";
+
+	// This gets replaced by the git tag/hash at compile-time
+	private static final String VERSION = "M4_VERSION_MACRO";
 
 	private static NetConMode mode = NetConMode.SERVER;
 	private static String itemId = null;

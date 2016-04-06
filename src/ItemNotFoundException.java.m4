@@ -1,3 +1,4 @@
+// vim: syntax=java noexpandtab:
 package ca.dioo.java.motqueser;
 
 public class ItemNotFoundException extends Exception {
