@@ -178,6 +178,7 @@ class Motqueser {
 	private static void executeAsClient() {
 		Message msg;
 		String host;
+		Item it = null;
 
 		switch (reqType) {
 		case DEL_ITEM:
@@ -185,7 +186,11 @@ class Motqueser {
 			//msg = prepareClientMessage(itemId);
 			//break;
 		case NEW_ITEM:
-			msg = prepareControlMessage(itemId);
+			{
+				CtrlMsgTuple tup = prepareControlMessage(itemId);
+				msg = tup.cm;
+				it = tup.it;
+			}
 			break;
 		default:
 			throw new Error("Invalid request type: " + reqType);
@@ -220,25 +225,47 @@ class Motqueser {
 			System.exit(1);
 		} catch (IOException e) {
 			System.err.println("Error in socket communication: " + e.getMessage());
+
+			if (reqType == ClientReqType.NEW_ITEM) {
+				System.err.println("Executing script.");
+				try {
+					System.exit(ScriptRunnerThread.executeScript(it));
+				} catch (IOException|InterruptedException e2) {
+					throw new Error(e2.getMessage(), e2);
+				}
+			}
 			System.exit(1);
 		}
 	}
 
 
-	private static Message prepareControlMessage(String itemId) {
+	private static class CtrlMsgTuple {
+		ControlMessage cm;
+		Item it;
+
+		CtrlMsgTuple(ControlMessage cm, Item it) {
+			this.cm = cm;
+			this.it = it;
+		}
+	}
+
+
+	private static CtrlMsgTuple prepareControlMessage(String itemId) {
 		Path itemPath = null;
+		Item it = null;
 		try {
-			itemPath = Utils.getVideoPathFromItem(Utils.getItemFromString(itemId));
+			it = Utils.getItemFromString(itemId);
+			itemPath = Utils.getVideoPathFromItem(it);
 		} catch (IOException e) {
 			System.err.println("No file matched filter for item id " + itemId + ":" + e.getMessage());
 			System.exit(2);
 		}
 
 		ControlMessage cm = new ControlMessage();
-		ControlMessage.Item it = new ControlMessage.Item(itemId);
-		cm.add(it);
+		ControlMessage.Item cm_it = new ControlMessage.Item(itemId);
+		cm.add(cm_it);
 
-		return cm;
+		return new CtrlMsgTuple(cm, it);
 	}
 
 

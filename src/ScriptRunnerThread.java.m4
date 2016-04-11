@@ -10,6 +10,7 @@ class ScriptRunnerThread extends Thread {
 
 	private static ConcurrentLinkedQueue<Item> queue;
 	private static ScriptRunnerThread singleton = null;
+	private static Runtime rt = Runtime.getRuntime();
 
 	public ScriptRunnerThread() {
 		if (singleton != null) {
@@ -33,32 +34,38 @@ class ScriptRunnerThread extends Thread {
 	}
 
 
+	public static int executeScript(Item it) throws IOException, InterruptedException {
+		byte[] b = new byte[32768];
+		String cmd = Config.getScript() + " " + it.getVidPath();
+		Process p = rt.exec(cmd);
+
+		if (Utils.dbgLvl >= 3) {
+			System.out.println("Executing " + cmd);
+
+			InputStream is = p.getInputStream();
+			int nb;
+			while ((nb = is.read(b)) > -1) {
+				System.out.write(b, 0, nb);
+			}
+		}
+
+		int ret = p.waitFor();
+
+		if (Utils.dbgLvl >= 3) {
+			System.out.println("\nDone");
+		}
+
+		return ret;
+	}
+
+
 	public void run() {
 		Item it;
-		Runtime rt = Runtime.getRuntime();
-		byte[] b = new byte[32768];
 
 		EXIT: while (true) {
 			while ((it = queue.poll()) != null) {
 				try {
-					String cmd = Config.getScript() + " " + it.getVidPath();
-					Process p = rt.exec(cmd);
-
-					if (Utils.dbgLvl >= 3) {
-						System.out.println("Executing " + cmd);
-
-						InputStream is = p.getInputStream();
-						int nb;
-						while ((nb = is.read(b)) > -1) {
-							System.out.write(b, 0, nb);
-						}
-					}
-
-					p.waitFor();
-
-					if (Utils.dbgLvl >= 3) {
-						System.out.println("\nDone");
-					}
+					executeScript(it);
 				} catch (IOException|InterruptedException e) {
 					//Pass
 				}
