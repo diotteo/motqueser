@@ -33,8 +33,13 @@ test_libs := $(wildcard test/libs/*.jar)
 all:
 
 
+.PHONY: git-commit-check
+git-commit-check:
+	@(exit $$(git status --porcelain -uno | wc -l)) || (echo -e "********\n**** You have uncommitted changes\n********"; false)
+
+
 .PHONY: dist
-dist: jar
+dist: git-commit-check jar
 	@[ -d dist/$(PRGM) ] || mkdir -p dist/$(PRGM)
 	cp $(PRGM).jar libs/*.jar dist/$(PRGM)/
 	cp $(PRGM).sh dist/$(PRGM)/
