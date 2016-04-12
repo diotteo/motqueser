@@ -46,7 +46,7 @@ class Motqueser {
 
 
 	public static void printHelp() {
-		System.err.println("Usage: " + Motqueser.class.getName() + " [options]"
+		System.err.println("Usage: " + PRGM + " [options]"
 				+ "\n  -h|--help"
 				+ "\n  -p|--port <port>:"
 				+ "\n      port to listen on (in client mode, port to connect to). If not specified, default to automatically allocated (random port)"

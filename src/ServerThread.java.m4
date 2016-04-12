@@ -24,8 +24,6 @@ import ca.dioo.java.libmotqueser.ServerMessage;
 import ca.dioo.java.libmotqueser.MalformedMessageException;
 
 class ServerThread extends Thread {
-	private static final Class THIS_CLASS = ServerThread.class;
-
 	private Socket sock;
 	private BufferedOutputStream os;
 	private BufferedInputStream is;
@@ -43,7 +41,7 @@ class ServerThread extends Thread {
 			wtr = new PrintWriter(os, true);
 			rdr = new BufferedReader(new InputStreamReader(is));
 		} catch (IOException e) {
-			throw new Error("Error creating ServerThread", e);
+			throw new Error("Error creating " + this.getClass().getName(), e);
 		}
 	}
 
@@ -70,7 +68,7 @@ class ServerThread extends Thread {
 						processControlMessage((ControlMessage)m);
 					}
 				} else {
-					System.err.println("Bogus message, discarding: Message is not a ClientMessage");
+					System.err.println("Bogus message type received, closing connection: Message is a " + m.getClass().getName());
 					break END;
 				}
 			}
