@@ -72,8 +72,13 @@ test: $(test_objects)
 	$(JAVA) -ea $(JAVA_ARGS) -cp libs/*:test/libs/*:$(BUILD_DIR):$(JAR_DIR) Test
 
 
-$(test_objects): $(BUILD_DIR)/%.class: test/%.java $(libs) $(BUILD_DIR)
-	$(JAVAC) $(JAVAC_ARGS) -cp libs/*:$(BUILD_DIR) -d $(BUILD_DIR) $<
+first_test_obj := $(firstword $(test_objects))
+rest_test_obj := $(wordlist 2,$(words $(test_objects)),$(test_objects))
+
+$(first_test_obj): $(test_src) $(libs) $(BUILD_DIR)
+	$(JAVAC) $(JAVAC_ARGS) -cp libs/*:$(BUILD_DIR) -d $(BUILD_DIR) $(test_src)
+
+$(rest_test_obj): $(first_test_obj)
 
 
 
@@ -106,23 +111,10 @@ $(src): $(BSRC_DIR)/%: src/%.m4 $(BSRC_DIR)
 	m4 -E -P -DM4_VERSION_MACRO=$(VERSION) $< > $@
 
 
-#Circular dependencies
-item_objects := $(patsubst %,$(BPATH)/%.class,Item Utils)
-objects := $(filter-out $(item_objects),$(objects))
+first_obj := $(firstword $(objects))
+rest_obj := $(wordlist 2,$(words $(objects)),$(objects))
 
-$(item_objects) : $(patsubst %,$(BSRC_DIR)/%.java,Item Utils)
-	$(JAVAC) $(JAVAC_ARGS) -cp libs/*:$(JAR_DIR) -d $(JAR_DIR) $(patsubst %,$(BSRC_DIR)/%.java,Item Utils)
+$(first_obj): $(src) $(libs) $(JAR_DIR)
+	$(JAVAC) $(JAVAC_ARGS) -cp libs/*:$(JAR_DIR) -d $(JAR_DIR) $(src)
 
-
-$(objects): $(BPATH)/%.class: $(BSRC_DIR)/%.java $(libs) $(JAR_DIR)
-	$(JAVAC) $(JAVAC_ARGS) -cp libs/*:$(JAR_DIR) -d $(JAR_DIR) $<
-
-
-$(item_objects): $(patsubst %,$(BPATH)/%.class,Config)
-
-$(BPATH)/ServerThread.class: $(patsubst %,$(BPATH)/%.class,ItemQueue Utils ItemNotFoundException)
-$(BPATH)/NotificationThread.class: $(patsubst %,$(BPATH)/%.class,ItemQueue Utils)
-$(BPATH)/ScriptRunnerThread.class: $(patsubst %,$(BPATH)/%.class,Config Utils Item)
-$(BPATH)/ItemQueue.class: $(patsubst %,$(BPATH)/%.class,Item ScriptRunnerThread ItemNotFoundException)
-$(BPATH)/DisplayThread.class: $(patsubst %,$(BPATH)/%.class,ItemQueue)
-$(BPATH)/Motqueser.class: $(patsubst %,$(BPATH)/%.class,ServerThread DisplayThread NotificationThread ScriptRunnerThread Utils)
+$(rest_obj): $(first_obj)
