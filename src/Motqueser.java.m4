@@ -285,8 +285,10 @@ class Motqueser {
 
 			DisplayThread dt = new DisplayThread();
 			ScriptRunnerThread srt = new ScriptRunnerThread();
+			NotificationThread nt = new NotificationThread();
 			dt.start();
 			srt.start();
+			nt.start();
 
 			while (true) {
 				Socket sock = servSock.accept();

@@ -14,7 +14,8 @@ import java.io.File;
 public class Config {
 	private static File configFile = null;
 
-	public static int port;
+	private static int port = -1;
+	private static int notificationPort = -1;
 	private static Path mediaDir = null;
 	private static String script = null;
 	private static int delay = -1;
@@ -32,30 +33,33 @@ public class Config {
 	private Config() {}
 
 
+	public static int getPort() {
+		return port;
+	}
+
+	public static int getNotificationPort() {
+		return notificationPort;
+	}
+
 	public static Path getMediaDir() {
 		return mediaDir;
 	}
-
 
 	public static String getScript() {
 		return script;
 	}
 
-
 	public static int getDelay() {
 		return delay;
 	}
-
 
 	public static String getDeletePrefix() {
 		return deletePrefix;
 	}
 
-
 	public static String getDeleteSuffix() {
 		return deleteSuffix;
 	}
-
 
 	private static File getConfigFile() {
 		return new File("motqueser.conf");
@@ -113,6 +117,14 @@ public class Config {
 						int i = new Integer(val);
 						if (i > 0 && i < 65536) {
 							port = i;
+						}
+					}
+					break;
+				case "notification_port":
+					{
+						int i = new Integer(val);
+						if (i > 0 && i < 65536 && i != port) {
+							notificationPort = i;
 						}
 					}
 					break;

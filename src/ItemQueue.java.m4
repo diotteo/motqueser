@@ -19,6 +19,12 @@ class ItemQueue {
 	private static int minId = 0;
 	private static int nextId = 0;
 	private static long snoozeUntilTs = -1;
+	private static OnNewEventListener mNeListnr = null;
+
+
+	public interface OnNewEventListener {
+		public void onNewEvent(ItemWithId it);
+	}
 
 
 	private static class ItemWrapper extends ItemWithId {
@@ -83,7 +89,16 @@ class ItemQueue {
 	}
 
 
-	public static boolean snoozeUntil(long ts) {
+	public static synchronized void setNewEventListener(OnNewEventListener l) {
+		mNeListnr = l;
+	}
+
+	public static synchronized void removeNewEventListener() {
+		mNeListnr = null;
+	}
+
+
+	public static synchronized boolean snoozeUntil(long ts) {
 		boolean wasExtended = false;
 
 		if (snoozeUntilTs < ts) {
@@ -108,7 +123,7 @@ class ItemQueue {
 	}
 
 
-	public static void unsnooze() {
+	public static synchronized void unsnooze() {
 		snoozeUntilTs = -1;
 	}
 
@@ -118,7 +133,7 @@ class ItemQueue {
 	}
 
 
-	public static boolean isSnoozed(long timestamp) {
+	public static synchronized boolean isSnoozed(long timestamp) {
 		return (timestamp <= snoozeUntilTs);
 	}
 
@@ -168,6 +183,11 @@ class ItemQueue {
 			assert (tmp == null);
 			tmp = indexMap.put(iw.getEventId(), iw);
 			assert (tmp == null);
+
+			if (mNeListnr != null) {
+				mNeListnr.onNewEvent(iw);
+			}
+
 			ret = true;
 		}
 		return ret;
