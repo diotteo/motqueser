@@ -92,7 +92,7 @@ $(BUILD_DIR) $(JAR_DIR) $(BSRC_DIR):
 clean:
 	@[ ! -e $(BUILD_DIR) ] || rm -rv $(BUILD_DIR)
 	@[ ! -e dist ] || rm -rv dist
-	@[ ! -e $(PRGM)-$(VERSION).jar ] || rm -rv $(PRGM)-$(VERSION).jar
+	@rm -v $(PRGM)-*.jar || true
 
 
 libs:
