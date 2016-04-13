@@ -41,7 +41,7 @@ git-commit-check:
 .PHONY: dist
 dist: jar | git-commit-check
 	@[ -d dist/$(PRGM) ] || mkdir -p dist/$(PRGM)
-	cp $(PRGM).jar libs/*.jar dist/$(PRGM)/
+	cp $(PRGM)-$(VERSION).jar libs/*.jar dist/$(PRGM)/
 	cp $(PRGM).sh dist/$(PRGM)/
 	cp $(PRGM).conf.sample dist/$(PRGM)/
 	cd dist/ && tar -cf $(PRGM)-$(VERSION).tar $(PRGM)/
@@ -51,10 +51,10 @@ dist: jar | git-commit-check
 
 
 .PHONY: jar
-jar: $(PRGM).jar
+jar: $(PRGM)-$(VERSION).jar
 
 
-$(PRGM).jar: $(objects)
+$(PRGM)-$(VERSION).jar: $(objects)
 	jar -cf $@ -C $(JAR_DIR) .
 
 
@@ -92,7 +92,7 @@ $(BUILD_DIR) $(JAR_DIR) $(BSRC_DIR):
 clean:
 	@[ ! -e $(BUILD_DIR) ] || rm -rv $(BUILD_DIR)
 	@[ ! -e dist ] || rm -rv dist
-	@[ ! -e $(PRGM).jar ] || rm -rv $(PRGM).jar
+	@[ ! -e $(PRGM)-$(VERSION).jar ] || rm -rv $(PRGM)-$(VERSION).jar
 
 
 libs:
