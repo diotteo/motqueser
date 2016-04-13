@@ -39,7 +39,7 @@ git-commit-check:
 
 
 .PHONY: dist
-dist: git-commit-check jar
+dist: jar | git-commit-check
 	@[ -d dist/$(PRGM) ] || mkdir -p dist/$(PRGM)
 	cp $(PRGM).jar libs/*.jar dist/$(PRGM)/
 	cp $(PRGM).sh dist/$(PRGM)/
