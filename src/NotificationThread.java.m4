@@ -41,7 +41,11 @@ class NotificationThread extends Thread {
 
 
 	public NotificationThread() {
-		mServSock = new ServerSocket(Config.getNotificationPort());
+		try {
+			mServSock = new ServerSocket(Config.getNotificationPort());
+		} catch (IOException e) {
+			throw new Error("Error opening ServerSocket: " + e.getMessage(), e);
+		}
 		mSockQueue = new ConcurrentLinkedQueue<Socket>();
 		mIql = new ItemQueueListener();
 		ItemQueue.setNewEventListener(mIql);
@@ -52,49 +56,43 @@ class NotificationThread extends Thread {
 		ItemQueueListener() {
 		}
 
-		public void onNewEvent(ItemWithId it) {
+		public void onNewEvent(ItemQueue.ItemWithId it) {
 			for (Iterator<Socket> i = mSockQueue.iterator(); i.hasNext(); ) {
 				Socket sock = i.next();
-				BufferedOutputStream os = new BufferedOutputStream(sock.getOutputStream());
-				PrintWriter wtr = new PrintWriter(os, true);
-
-				NotificationMessage nm = new NotificationMessage();
 				try {
-					nm.setItem(new BaseServerMessage.Item(it.getId(), it.getImgSize(), it.getVidSize(), it.getVidLen()));
-				} catch (IOException e) {
-					throw new Error("problem determining media size", e);
-				}
-				wtr.println(nm.getXmlString());
+					BufferedOutputStream os = new BufferedOutputStream(sock.getOutputStream());
+					PrintWriter wtr = new PrintWriter(os, true);
 
-				wtr.flush();
-				os.flush();
+					NotificationMessage nm = new NotificationMessage();
+					try {
+						nm.setItem(new BaseServerMessage.Item(it.getId(), it.getImgSize(), it.getVidSize(), it.getVidLen()));
+					} catch (IOException e) {
+						throw new Error("problem determining media size", e);
+					}
+					wtr.println(nm.getXmlString());
+
+					wtr.flush();
+					os.flush();
+				} catch (IOException e) {
+					throw new Error("Error manipulating output stream in " + this.getClass().getName() + ": " + e.getMessage(), e);
+				}
 			}
 		}
-	}
-
-
-	try {
-		pis = new PushbackInputStream(sock.getInputStream());
-		is = new BufferedInputStream(pis);
-		wtr = new PrintWriter(os, true);
-		rdr = new BufferedReader(new InputStreamReader(is));
-	} catch (IOException e) {
-		throw new Error("Error creating " + this.getClass().getName(), e);
 	}
 
 
 	public void run() {
 		try {
 			END: while (true) {
-				sockCol.add(servSock.accept());
+				mSockQueue.add(mServSock.accept());
 			}
-			Utils.debugPrintln(2, "Closing thread");
 		} catch (IOException e) {
 			System.err.println(ca.dioo.java.commons.Utils.getPrettyStackTrace(e));
 			System.err.println("Exception in thread \n" + e.getMessage());
 		} finally {
+			Utils.debugPrintln(2, "Closing thread");
 			try {
-				servSock.close();
+				mServSock.close();
 			} catch (IOException e) {
 				//Pass
 			}

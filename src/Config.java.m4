@@ -37,6 +37,10 @@ public class Config {
 		return port;
 	}
 
+	public static void setPort(int port) {
+		Config.port = port;
+	}
+
 	public static int getNotificationPort() {
 		return notificationPort;
 	}

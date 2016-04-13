@@ -133,7 +133,7 @@ class Motqueser {
 						System.err.println(c + ": \"" + p + "\" is not 1 <= port <= 65535");
 						printHelp(1);
 					}
-					Config.port = p;
+					Config.setPort(p);
 				}
 				break;
 			case 'V':
@@ -159,7 +159,7 @@ class Motqueser {
 		}
 
 		if (mode == NetConMode.CLIENT) {
-			if (Config.port == 0) {
+			if (Config.getPort() == 0) {
 				System.err.println("Error: port must be specified in client mode\n");
 				printHelp(1);
 			} else if (itemId == null) {
@@ -197,7 +197,7 @@ class Motqueser {
 		}
 
 		try {
-			Socket sock = new Socket(InetAddress.getByName("127.0.0.1"), Config.port);
+			Socket sock = new Socket(InetAddress.getByName("127.0.0.1"), Config.getPort());
 			PrintWriter out = new PrintWriter(sock.getOutputStream(), true);
 			BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
 			out.println(msg.getXmlString());
@@ -280,7 +280,7 @@ class Motqueser {
 
 	public static void executeAsServer() {
 		try {
-			ServerSocket servSock = new ServerSocket(Config.port);
+			ServerSocket servSock = new ServerSocket(Config.getPort());
 			System.out.println("Starting " + PRGM + " version " + VERSION + " listening on port " + servSock.getLocalPort());
 
 			DisplayThread dt = new DisplayThread();
@@ -298,7 +298,7 @@ class Motqueser {
 				st.start();
 			}
 		} catch (IOException e) {
-			System.err.println("Exception listening on port " + Config.port + "\n" + e.getMessage());
+			System.err.println("Exception listening on port " + Config.getPort() + "\n" + e.getMessage());
 			System.exit(1);
 		}
 	}
