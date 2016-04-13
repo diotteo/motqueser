@@ -285,10 +285,19 @@ class Motqueser {
 
 			DisplayThread dt = new DisplayThread();
 			ScriptRunnerThread srt = new ScriptRunnerThread();
-			NotificationThread nt = new NotificationThread();
+
+			NotificationThread nt = null;
+			int notfPort = Config.getNotificationPort();
+			if (notfPort > -1) {
+				System.out.println("Starting notification thread listening on port " + Config.getNotificationPort());
+				nt = new NotificationThread(Config.getNotificationPort());
+			}
+
 			dt.start();
 			srt.start();
-			nt.start();
+			if (notfPort > -1) {
+				nt.start();
+			}
 
 			while (true) {
 				Socket sock = servSock.accept();

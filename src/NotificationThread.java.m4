@@ -40,9 +40,9 @@ class NotificationThread extends Thread {
 	private ItemQueueListener mIql;
 
 
-	public NotificationThread() {
+	public NotificationThread(int port) {
 		try {
-			mServSock = new ServerSocket(Config.getNotificationPort());
+			mServSock = new ServerSocket(port);
 		} catch (IOException e) {
 			throw new Error("Error opening ServerSocket: " + e.getMessage(), e);
 		}
