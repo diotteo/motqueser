@@ -88,6 +88,10 @@ $(BUILD_DIR) $(JAR_DIR) $(BSRC_DIR):
 	@[ -d $@ ] || mkdir -p $@
 
 
+.PHONY: distclean
+distclean: clean
+	@rm -v $(PRGM)-*.tar.bz2
+
 .PHONY: clean
 clean:
 	@[ ! -e $(BUILD_DIR) ] || rm -rv $(BUILD_DIR)
