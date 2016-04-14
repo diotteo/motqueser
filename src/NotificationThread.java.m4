@@ -2,6 +2,7 @@
 package ca.dioo.java.motqueser;
 
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.ServerSocket;
 import java.nio.file.Path;
 import java.io.File;
@@ -73,6 +74,9 @@ class NotificationThread extends Thread {
 
 					wtr.flush();
 					os.flush();
+				} catch (SocketException e) {
+Utils.debugPrintln(3, "Dropping problematic connection");
+					i.remove();
 				} catch (IOException e) {
 					throw new Error("Error manipulating output stream in " + this.getClass().getName() + ": " + e.getMessage(), e);
 				}
