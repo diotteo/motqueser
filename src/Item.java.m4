@@ -89,7 +89,7 @@ class Item {
 		String id = idx + "-";
 		Calendar cl = new GregorianCalendar();
 		cl.setTimeInMillis(timestamp * 1000);
-		id += new SimpleDateFormat("yyyyMMddkkmmss").format(cl.getTime());
+		id += new SimpleDateFormat("yyyyMMddHHmmss").format(cl.getTime());
 
 		return id;
 	}

@@ -56,7 +56,7 @@ public class Utils {
 
 	public static long getTimestampFromString(String id) throws ParseException {
 		String a[] = id.split("-");
-		return new SimpleDateFormat("yyyyMMddkkmmss").parse(a[1]).getTime() / 1000;
+		return new SimpleDateFormat("yyyyMMddHHmmss").parse(a[1]).getTime() / 1000;
 	}
 
 
