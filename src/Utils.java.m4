@@ -15,6 +15,7 @@ import java.text.SimpleDateFormat;
 import java.text.ParseException;
 
 public class Utils {
+	public static final int MAX_EVENT_LEN = 600;
 	public static int dbgLvl = 0;
 	public static Runtime rt = Runtime.getRuntime();
 
@@ -53,6 +54,12 @@ public class Utils {
 	}
 
 
+	public static long getTimestampFromString(String id) throws ParseException {
+		String a[] = id.split("-");
+		return new SimpleDateFormat("yyyyMMddkkmmss").parse(a[1]).getTime() / 1000;
+	}
+
+
 	public static Item getItemFromString(String id) throws IOException {
 		//FIXME: motion-specific rule
 		int idx = -1;
@@ -60,7 +67,7 @@ public class Utils {
 		try {
 			String a[] = id.split("-");
 			idx = Integer.parseInt(a[0]);
-			timestamp = new SimpleDateFormat("yyyyMMddkkmmss").parse(a[1]).getTime() / 1000;
+			timestamp = getTimestampFromString(id);
 		} catch (ParseException|NumberFormatException e) {
 			throw new Error("something went wrong parsing ControlMessage id", e);
 		}
@@ -119,7 +126,7 @@ public class Utils {
 
 
 	private static String getGlobFromItem(Item it, String ext) {
-		String glob = it.getEventId() + "*";
+		String glob = it.getEventId() + "-*";
 		if (ext != null) {
 			glob += "." + ext;
 		}
@@ -162,10 +169,18 @@ public class Utils {
 			String glob = getGlobFromItem(it, "jpg");
 			DirectoryStream<Path> ds = Files.newDirectoryStream(Config.getMediaDir(), glob);
 
+			long ts = it.getTimestamp();
 			ArrayList<Path> al = new ArrayList<Path>();
 			for (Path p: ds) {
-				al.add(p);
-				debugPrintln(2, p.toString());
+				try {
+					long imgTs = getTimestampFromString(p.getFileName().toString());
+					if (imgTs >= ts && imgTs < ts + MAX_EVENT_LEN) {
+						al.add(p);
+						debugPrintln(2, p.toString());
+					}
+				} catch (ParseException e) {
+					//Pass
+				}
 			}
 
 			if (al.size() > 0) {
