@@ -90,7 +90,7 @@ class Motqueser {
 					 * /path/to/1234-20001129144023.avi and 1234-20001129144023
 					 */
 					String s = new File(g.getOptarg()).getName();
-					String a[] = s.split("-|[^[:digit:]]");
+					String a[] = s.split("-|\\D");
 					if (a.length == 2) {
 						itemId = a[0] + "-" + a[1];
 					} else if (a.length == 1) {
