@@ -126,7 +126,7 @@ public class Utils {
 
 
 	private static String getGlobFromItem(Item it, String ext) {
-		String glob = it.getEventId() + "-*";
+		String glob = it.getEventId() + "*";
 		if (ext != null) {
 			glob += "." + ext;
 		}
