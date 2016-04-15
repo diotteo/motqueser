@@ -46,7 +46,7 @@ class Motqueser {
 
 
 	public static void printHelp() {
-		System.err.println("Usage: " + PRGM + " [options]"
+		System.out.println("Usage: " + PRGM + " [options]"
 				+ "\n  -h|--help"
 				+ "\n  -p|--port <port>:"
 				+ "\n      port to listen on (in client mode, port to connect to). If not specified, default to automatically allocated (random port)"
@@ -205,7 +205,8 @@ class Motqueser {
 			if (msg instanceof ControlMessage) {
 				String result = in.readLine();
 				if (result == null) {
-					System.out.println("Connection closed unexpectedly");
+					System.err.println("Connection closed unexpectedly");
+					System.exit(2);
 				} else if (!result.equals("success")) {
 					System.err.println(result);
 					System.exit(2);
@@ -227,7 +228,7 @@ class Motqueser {
 			System.err.println("Error in socket communication: " + e.getMessage());
 
 			if (reqType == ClientReqType.NEW_ITEM) {
-				System.err.println("Executing script.");
+				System.out.println("Executing script.");
 				try {
 					System.exit(ScriptRunnerThread.executeScript(it));
 				} catch (IOException|InterruptedException e2) {

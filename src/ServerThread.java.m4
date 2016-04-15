@@ -203,7 +203,7 @@ class ServerThread extends Thread {
 			} else {
 				int fileLen = (int)mediaFile.length();
 				byte[] fileContent = new byte[fileLen];
-System.out.println("file \"" + mediaPath.toString() + "\" is " + fileLen + " bytes long");
+				Utils.debugPrintln(3, "file \"" + mediaPath.toString() + "\" is " + fileLen + " bytes long");
 				int len = (new FileInputStream(mediaFile)).read(fileContent);
 
 				smit.setMediaSize(len);
@@ -233,7 +233,7 @@ System.out.println("file \"" + mediaPath.toString() + "\" is " + fileLen + " byt
 
 		} else {
 			try {
-				System.err.println("Deleting item id " + idr.getId());
+				System.out.println("Deleting item id " + idr.getId());
 				Utils.deleteByItem(ItemQueue.get(idr.getId()));
 				wtr.println(sm.getXmlString());
 			} catch (ItemNotFoundException e) {
@@ -252,7 +252,7 @@ System.out.println("file \"" + mediaPath.toString() + "\" is " + fileLen + " byt
 			wtr.println(em.getXmlString());
 
 		} else {
-			System.err.println("Keeping item id " + ipr.getId());
+			System.out.println("Keeping item id " + ipr.getId());
 			wtr.println(sm.getXmlString());
 		}
 	}
@@ -261,14 +261,14 @@ System.out.println("file \"" + mediaPath.toString() + "\" is " + fileLen + " byt
 	private void processSnoozeRequest(ServerMessage.SnoozeResponse sr, ServerMessage sm) {
 		int interval = sr.getSnoozeInterval();
 
-		Utils.debugPrintln(1, "snoozing for " + (interval / 60) + " minutes");
+		System.out.println("Snoozing for " + (interval / 60) + " minutes");
 		ItemQueue.snoozeFor(interval);
 		wtr.println(sm.getXmlString());
 	}
 
 
 	private void processUnsnoozeRequest(ServerMessage.UnsnoozeResponse ur, ServerMessage sm) {
-		Utils.debugPrintln(1, "Unsnoozing");
+		System.out.println("Unsnoozing");
 		ItemQueue.unsnooze();
 		wtr.println(sm.getXmlString());
 	}
