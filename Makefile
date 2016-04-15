@@ -90,13 +90,13 @@ $(BUILD_DIR) $(JAR_DIR) $(BSRC_DIR):
 
 .PHONY: distclean
 distclean: clean
-	@rm -v $(PRGM)-*.tar.bz2
+	@rm -v $(PRGM)-*.tar.bz2 2>/dev/null || true
 
 .PHONY: clean
 clean:
 	@[ ! -e $(BUILD_DIR) ] || rm -rv $(BUILD_DIR)
 	@[ ! -e dist ] || rm -rv dist
-	@rm -v $(PRGM)-*.jar || true
+	@rm -v $(PRGM)-*.jar 2>/dev/null || true
 
 
 libs:
