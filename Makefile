@@ -21,9 +21,13 @@ empty :=
 space := $(empty) $(empty)
 
 m4_src := $(wildcard src/*.java.m4)
-src := $(patsubst src/%.m4,$(BSRC_DIR)/%,$(m4_src))
+src_src := $(wildcard src/*.java)
+src1 := $(patsubst src/%.m4,$(BSRC_DIR)/%,$(m4_src))
+src2 := $(patsubst src/%,$(BSRC_DIR)/%,$(src_src))
+src := $(src1) $(src2)
 objects := $(patsubst $(BSRC_DIR)/%.java,$(BPATH)/%.class,$(src))
 libs = $(wildcard libs/*.jar)
+res := $(BPATH)/version.properties
 
 test_src := $(wildcard test/*.java)
 test_objects := $(patsubst test/%.java,$(BUILD_DIR)/%.class,$(test_src))
@@ -82,9 +86,10 @@ $(rest_test_obj): $(first_test_obj)
 
 
 
+$(BPATH): $(JAR_DIR)
 $(BSRC_DIR): $(BUILD_DIR)
 $(JAR_DIR): $(BUILD_DIR)
-$(BUILD_DIR) $(JAR_DIR) $(BSRC_DIR):
+$(BUILD_DIR) $(JAR_DIR) $(BSRC_DIR) $(BPATH):
 	@[ -d $@ ] || mkdir -p $@
 
 
@@ -111,8 +116,15 @@ $(libs) $(test_libs):
 	$(MAKE) -C $(dir $(shell readlink $@)) jar
 
 
-$(src): $(BSRC_DIR)/%: src/%.m4 $(BSRC_DIR)
+$(BPATH)/version.properties: $(BPATH)
+	@echo vcs_version=$(VERSION) > $(BPATH)/version.properties
+
+
+$(src1): $(BSRC_DIR)/%: src/%.m4 $(BSRC_DIR) $(res)
 	m4 -E -P -DM4_VERSION_MACRO=$(VERSION) $< > $@
+
+$(src2): $(BSRC_DIR)/%.java: src/%.java $(BSRC_DIR) $(res)
+	cp -v $< $@
 
 
 first_obj := $(firstword $(objects))

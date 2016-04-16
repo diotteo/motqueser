@@ -37,8 +37,7 @@ class Motqueser {
 	private static final Class THIS_CLASS = Motqueser.class;
 	public static final String PRGM = THIS_CLASS.getSimpleName();
 
-	// This gets replaced by the git tag/hash at compile-time
-	private static final String VERSION = "M4_VERSION_MACRO";
+	private static final String VERSION = Version.VERSION;
 
 	private static NetConMode mode = NetConMode.SERVER;
 	private static String itemId = null;
