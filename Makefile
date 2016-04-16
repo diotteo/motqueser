@@ -14,20 +14,23 @@ PRGM := motqueser
 PKG := ca/dioo/java/motqueser
 ROOT_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
 SRC_DIR := $(ROOT_DIR)/src
+LIB_DIR := $(ROOT_DIR)/libs
+TEST_DIR := $(ROOT_DIR)/test
+DIST_DIR := $(ROOT_DIR)/dist
 BUILD_DIR := $(ROOT_DIR)/build
 JAR_DIR := $(BUILD_DIR)/jar
 BPATH := $(JAR_DIR)/$(PKG)
 empty :=
 space := $(empty) $(empty)
 
-src := $(wildcard src/*.java)
+src := $(wildcard $(SRC_DIR)/*.java)
 objects := $(patsubst $(SRC_DIR)/%.java,$(BPATH)/%.class,$(src))
-libs = $(wildcard libs/*.jar)
+libs = $(wildcard $(LIB_DIR)/*.jar)
 res := $(BPATH)/version.properties
 
-test_src := $(wildcard test/*.java)
-test_objects := $(patsubst test/%.java,$(BUILD_DIR)/%.class,$(test_src))
-test_libs := $(wildcard test/libs/*.jar)
+test_src := $(wildcard $(TEST_DIR)/*.java)
+test_objects := $(patsubst $(TEST_DIR)/%.java,$(BUILD_DIR)/%.class,$(test_src))
+test_libs := $(wildcard $(TEST_DIR)/libs/*.jar)
 
 
 all:
@@ -40,14 +43,14 @@ git-commit-check:
 
 .PHONY: dist
 dist: jar | git-commit-check
-	@[ -d dist/$(PRGM) ] || mkdir -p dist/$(PRGM)
-	cp $(PRGM)-$(VERSION).jar libs/*.jar dist/$(PRGM)/
-	cp $(PRGM).sh dist/$(PRGM)/
-	cp $(PRGM).conf.sample dist/$(PRGM)/
-	cd dist/ && tar -cf $(PRGM)-$(VERSION).tar $(PRGM)/
-	cd dist/ && bzip2 -f $(PRGM)-$(VERSION).tar
-	mv dist/$(PRGM)-$(VERSION).tar.bz2 $(ROOT_DIR)
-	rm -rv dist
+	@[ -d $(DIST_DIR)/$(PRGM) ] || mkdir -p $(DIST_DIR)/$(PRGM)
+	cp $(PRGM)-$(VERSION).jar $(LIB_DIR)/*.jar $(DIST_DIR)/$(PRGM)/
+	cp $(PRGM).sh $(DIST_DIR)/$(PRGM)/
+	cp $(PRGM).conf.sample $(DIST_DIR)/$(PRGM)/
+	cd $(DIST_DIR)/ && tar -cf $(PRGM)-$(VERSION).tar $(PRGM)/
+	cd $(DIST_DIR)/ && bzip2 -f $(PRGM)-$(VERSION).tar
+	mv $(DIST_DIR)/$(PRGM)-$(VERSION).tar.bz2 $(ROOT_DIR)
+	rm -rv $(DIST_DIR)
 
 
 .PHONY: jar
@@ -64,19 +67,19 @@ all: $(objects)
 
 .PHONY: run
 run: $(objects)
-	$(JAVA) $(JAVA_ARGS) -cp libs/*:$(JAR_DIR) $(subst /,.,$(PKG)/$(PRGM)) $(ARGS)
+	$(JAVA) $(JAVA_ARGS) -cp $(LIB_DIR)/*:$(JAR_DIR) $(subst /,.,$(PKG)/$(PRGM)) $(ARGS)
 
 
 .PHONY: test
 test: $(test_objects)
-	$(JAVA) -ea $(JAVA_ARGS) -cp libs/*:test/libs/*:$(BUILD_DIR):$(JAR_DIR) Test
+	$(JAVA) -ea $(JAVA_ARGS) -cp $(LIB_DIR)/*:$(TEST_DIR)/libs/*:$(BUILD_DIR):$(JAR_DIR) Test
 
 
 first_test_obj := $(firstword $(test_objects))
 rest_test_obj := $(wordlist 2,$(words $(test_objects)),$(test_objects))
 
 $(first_test_obj): $(test_src) $(libs) $(BUILD_DIR)
-	$(JAVAC) $(JAVAC_ARGS) -cp libs/*:$(BUILD_DIR) -d $(BUILD_DIR) $(test_src)
+	$(JAVAC) $(JAVAC_ARGS) -cp $(LIB_DIR)/*:$(BUILD_DIR) -d $(BUILD_DIR) $(test_src)
 
 $(rest_test_obj): $(first_test_obj)
 
@@ -95,12 +98,12 @@ distclean: clean
 .PHONY: clean
 clean:
 	@[ ! -e $(BUILD_DIR) ] || rm -rv $(BUILD_DIR)
-	@[ ! -e dist ] || rm -rv dist
+	@[ ! -e $(DIST_DIR) ] || rm -rv $(DIST_DIR)
 	@rm -v $(PRGM)-*.jar 2>/dev/null || true
 
 
-libs:
-	@[ -d libs ] || mkdir libs
+$(LIB_DIR):
+	@[ -d $(LIB_DIR) ] || mkdir $(LIB_DIR)
 
 
 .PHONY: libjars
@@ -119,6 +122,6 @@ first_obj := $(firstword $(objects))
 rest_obj := $(wordlist 2,$(words $(objects)),$(objects))
 
 $(first_obj): $(src) $(libs) $(JAR_DIR) $(res)
-	$(JAVAC) $(JAVAC_ARGS) -cp libs/*:$(JAR_DIR) -d $(JAR_DIR) $(src)
+	$(JAVAC) $(JAVAC_ARGS) -cp $(LIB_DIR)/*:$(JAR_DIR) -d $(JAR_DIR) $(src)
 
 $(rest_obj): $(first_obj)
