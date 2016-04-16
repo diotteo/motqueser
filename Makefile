@@ -57,7 +57,7 @@ dist: jar | git-commit-check
 jar: $(PRGM)-$(VERSION).jar
 
 
-$(PRGM)-$(VERSION).jar: $(objects)
+$(PRGM)-$(VERSION).jar: $(objects) $(JAR_DIR)
 	jar -cf $@ -C $(JAR_DIR) .
 
 
