@@ -13,19 +13,15 @@ JAVAC_ARGS ?= -Xlint:unchecked
 PRGM := motqueser
 PKG := ca/dioo/java/motqueser
 ROOT_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
+SRC_DIR := $(ROOT_DIR)/src
 BUILD_DIR := $(ROOT_DIR)/build
-BSRC_DIR := $(BUILD_DIR)/src
 JAR_DIR := $(BUILD_DIR)/jar
 BPATH := $(JAR_DIR)/$(PKG)
 empty :=
 space := $(empty) $(empty)
 
-m4_src := $(wildcard src/*.java.m4)
-src_src := $(wildcard src/*.java)
-src1 := $(patsubst src/%.m4,$(BSRC_DIR)/%,$(m4_src))
-src2 := $(patsubst src/%,$(BSRC_DIR)/%,$(src_src))
-src := $(src1) $(src2)
-objects := $(patsubst $(BSRC_DIR)/%.java,$(BPATH)/%.class,$(src))
+src := $(wildcard src/*.java)
+objects := $(patsubst $(SRC_DIR)/%.java,$(BPATH)/%.class,$(src))
 libs = $(wildcard libs/*.jar)
 res := $(BPATH)/version.properties
 
@@ -87,9 +83,8 @@ $(rest_test_obj): $(first_test_obj)
 
 
 $(BPATH): $(JAR_DIR)
-$(BSRC_DIR): $(BUILD_DIR)
 $(JAR_DIR): $(BUILD_DIR)
-$(BUILD_DIR) $(JAR_DIR) $(BSRC_DIR) $(BPATH):
+$(BUILD_DIR) $(JAR_DIR) $(BPATH):
 	@[ -d $@ ] || mkdir -p $@
 
 
@@ -120,17 +115,10 @@ $(BPATH)/version.properties: $(BPATH)
 	@echo vcs_version=$(VERSION) > $(BPATH)/version.properties
 
 
-$(src1): $(BSRC_DIR)/%: src/%.m4 $(BSRC_DIR) $(res)
-	m4 -E -P -DM4_VERSION_MACRO=$(VERSION) $< > $@
-
-$(src2): $(BSRC_DIR)/%.java: src/%.java $(BSRC_DIR) $(res)
-	cp -v $< $@
-
-
 first_obj := $(firstword $(objects))
 rest_obj := $(wordlist 2,$(words $(objects)),$(objects))
 
-$(first_obj): $(src) $(libs) $(JAR_DIR)
+$(first_obj): $(src) $(libs) $(JAR_DIR) $(res)
 	$(JAVAC) $(JAVAC_ARGS) -cp libs/*:$(JAR_DIR) -d $(JAR_DIR) $(src)
 
 $(rest_obj): $(first_obj)
