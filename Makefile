@@ -57,21 +57,21 @@ dist: jar | git-commit-check
 jar: $(PRGM)-$(VERSION).jar
 
 
-$(PRGM)-$(VERSION).jar: $(objects) $(JAR_DIR)
+$(PRGM)-$(VERSION).jar: $(objects) $(res) $(JAR_DIR)
 	jar -cf $@ -C $(JAR_DIR) .
 
 
 .PHONY: all
-all: $(objects)
+all: $(objects) $(res)
 
 
 .PHONY: run
-run: $(objects)
+run: $(objects) $(res)
 	$(JAVA) $(JAVA_ARGS) -cp $(LIB_DIR)/*:$(JAR_DIR) $(subst /,.,$(PKG)/$(PRGM)) $(ARGS)
 
 
 .PHONY: test
-test: $(test_objects)
+test: $(test_objects) $(res)
 	$(JAVA) -ea $(JAVA_ARGS) -cp $(LIB_DIR)/*:$(TEST_DIR)/libs/*:$(BUILD_DIR):$(JAR_DIR) Test
 
 
@@ -121,7 +121,7 @@ $(BPATH)/version.properties: $(BPATH)
 first_obj := $(firstword $(objects))
 rest_obj := $(wordlist 2,$(words $(objects)),$(objects))
 
-$(first_obj): $(src) $(libs) $(JAR_DIR) $(res)
+$(first_obj): $(src) $(libs) $(JAR_DIR)
 	$(JAVAC) $(JAVAC_ARGS) -cp $(LIB_DIR)/*:$(JAR_DIR) -d $(JAR_DIR) $(src)
 
 $(rest_obj): $(first_obj)
