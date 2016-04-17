@@ -19,11 +19,12 @@ class ItemQueue {
 	private static int minId = 0;
 	private static int nextId = 0;
 	private static long snoozeUntilTs = -1;
-	private static OnNewEventListener mNeListnr = null;
+	private static OnQueueChangeListener mQcListnr = null;
 
 
-	public interface OnNewEventListener {
-		public void onNewEvent(ItemWithId it);
+	public interface OnQueueChangeListener {
+		public void onNewItem(ItemWithId it);
+		public void onItemRemoved(int itemId);
 	}
 
 
@@ -89,12 +90,12 @@ class ItemQueue {
 	}
 
 
-	public static synchronized void setNewEventListener(OnNewEventListener l) {
-		mNeListnr = l;
+	public static synchronized void setQueueChangeListener(OnQueueChangeListener l) {
+		mQcListnr = l;
 	}
 
-	public static synchronized void removeNewEventListener() {
-		mNeListnr = null;
+	public static synchronized void removeQueueChangeListener() {
+		mQcListnr = null;
 	}
 
 
@@ -184,8 +185,8 @@ class ItemQueue {
 			tmp = indexMap.put(iw.getEventId(), iw);
 			assert (tmp == null);
 
-			if (mNeListnr != null) {
-				mNeListnr.onNewEvent(iw);
+			if (mQcListnr != null) {
+				mQcListnr.onNewItem(iw);
 			}
 
 			ret = true;
@@ -200,6 +201,9 @@ class ItemQueue {
 		ItemWrapper it = itemQueue.get(itemId);
 		if (it != null && !it.isHidden()) {
 			it.hide();
+			if (mQcListnr != null) {
+				mQcListnr.onItemRemoved(itemId);
+			}
 			wasRemoved = true;
 		}
 
@@ -214,6 +218,9 @@ class ItemQueue {
 		it = itemQueue.get(itemId);
 		if (it != null && !it.isHidden()) {
 			it.hide();
+			if (mQcListnr != null) {
+				mQcListnr.onItemRemoved(itemId);
+			}
 			wasRemoved = true;
 		}
 
@@ -258,6 +265,9 @@ class ItemQueue {
 				i.remove();
 				indexMap.remove(itwpr.getEventId());
 				queueForScript(itwpr);
+				if (mQcListnr != null && !itwpr.isHidden()) {
+					mQcListnr.onItemRemoved(itwpr.getId());
+				}
 
 			/* If we find itemId, then all items added so far predate
 			 * what was requested: empty the list.

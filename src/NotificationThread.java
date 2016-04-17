@@ -7,13 +7,9 @@ import java.net.ServerSocket;
 import java.nio.file.Path;
 import java.io.File;
 import java.io.IOException;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
+import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.io.PushbackInputStream;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.Iterator;
@@ -31,14 +27,32 @@ import ca.dioo.java.libmotqueser.MalformedMessageException;
 
 class NotificationThread extends Thread {
 	private BufferedOutputStream os;
-	private BufferedInputStream is;
-	private PushbackInputStream pis;
 	private PrintWriter wtr;
-	private BufferedReader rdr;
 
 	private ServerSocket mServSock;
-	private Queue<Socket> mSockQueue;
+	private Queue<SocketWrapper> mSockQueue;
 	private ItemQueueListener mIql;
+
+
+	static class SocketWrapper {
+		private Socket sock;
+		private BufferedOutputStream bos;
+		private PrintWriter wtr;
+
+		SocketWrapper(Socket sock) throws IOException {
+			this.sock = sock;
+			bos = new BufferedOutputStream(sock.getOutputStream());
+			wtr = new PrintWriter(bos, true);
+		}
+
+		PrintWriter getWriter() {
+			return wtr;
+		}
+
+		OutputStream getOutputStream() {
+			return bos;
+		}
+	}
 
 
 	public NotificationThread(int port) {
@@ -47,38 +61,62 @@ class NotificationThread extends Thread {
 		} catch (IOException e) {
 			throw new Error("Error opening ServerSocket: " + e.getMessage(), e);
 		}
-		mSockQueue = new ConcurrentLinkedQueue<Socket>();
+		mSockQueue = new ConcurrentLinkedQueue<SocketWrapper>();
 		mIql = new ItemQueueListener();
-		ItemQueue.setNewEventListener(mIql);
+		ItemQueue.setQueueChangeListener(mIql);
 	}
 
 
-	public class ItemQueueListener implements ItemQueue.OnNewEventListener {
+	public class ItemQueueListener implements ItemQueue.OnQueueChangeListener {
 		ItemQueueListener() {
 		}
 
-		public void onNewEvent(ItemQueue.ItemWithId it) {
-			for (Iterator<Socket> i = mSockQueue.iterator(); i.hasNext(); ) {
-				Socket sock = i.next();
+		public void onNewItem(ItemQueue.ItemWithId it) {
+			for (Iterator<SocketWrapper> i = mSockQueue.iterator(); i.hasNext(); ) {
+				SocketWrapper sock = i.next();
+				NotificationMessage nm = new NotificationMessage();
 				try {
-					BufferedOutputStream os = new BufferedOutputStream(sock.getOutputStream());
-					PrintWriter wtr = new PrintWriter(os, true);
-
-					NotificationMessage nm = new NotificationMessage();
-					try {
-						nm.setItem(new BaseServerMessage.Item(it.getId(), it.getImgSize(), it.getVidSize(), it.getVidLen()));
-					} catch (IOException e) {
-						throw new Error("problem determining media size", e);
-					}
-					wtr.println(nm.getXmlString());
-
-					wtr.flush();
-					os.flush();
-				} catch (SocketException e) {
-Utils.debugPrintln(3, "Dropping problematic connection");
-					i.remove();
+					nm.setItem(new NotificationMessage.NewItem(
+							new BaseServerMessage.Item(it.getId(), it.getImgSize(), it.getVidSize(), it.getVidLen())));
 				} catch (IOException e) {
-					throw new Error("Error manipulating output stream in " + this.getClass().getName() + ": " + e.getMessage(), e);
+					throw new Error("problem determining media size", e);
+				}
+
+				synchronized (sock) {
+					try {
+						PrintWriter wtr = sock.getWriter();
+						wtr.println(nm.getXmlString());
+						wtr.flush();
+						sock.getOutputStream().flush();
+					} catch (SocketException e) {
+Utils.debugPrintln(3, "Dropping problematic connection");
+						i.remove();
+					} catch (IOException e) {
+						throw new Error("Error manipulating output stream in " + this.getClass().getName() + ": " + e.getMessage(), e);
+					}
+				}
+			}
+		}
+
+
+		public void onItemRemoved(int itemId) {
+			for (Iterator<SocketWrapper> i = mSockQueue.iterator(); i.hasNext(); ) {
+				SocketWrapper sock = i.next();
+				NotificationMessage nm = new NotificationMessage();
+				nm.setItem(new NotificationMessage.RemovedItem(itemId));
+
+				synchronized (sock) {
+					try {
+						PrintWriter wtr = sock.getWriter();
+						wtr.println(nm.getXmlString());
+						wtr.flush();
+						sock.getOutputStream().flush();
+					} catch (SocketException e) {
+Utils.debugPrintln(3, "Dropping problematic connection");
+						i.remove();
+					} catch (IOException e) {
+						throw new Error("Error manipulating output stream in " + this.getClass().getName() + ": " + e.getMessage(), e);
+					}
 				}
 			}
 		}
@@ -88,7 +126,7 @@ Utils.debugPrintln(3, "Dropping problematic connection");
 	public void run() {
 		try {
 			END: while (true) {
-				mSockQueue.add(mServSock.accept());
+				mSockQueue.add(new SocketWrapper(mServSock.accept()));
 			}
 		} catch (IOException e) {
 			System.err.println(ca.dioo.java.commons.Utils.getPrettyStackTrace(e));
