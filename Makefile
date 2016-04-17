@@ -16,8 +16,8 @@ ROOT_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
 SRC_DIR := $(ROOT_DIR)/src
 LIB_DIR := $(ROOT_DIR)/libs
 TEST_DIR := $(ROOT_DIR)/test
-DIST_DIR := $(ROOT_DIR)/dist
 BUILD_DIR := $(ROOT_DIR)/build
+DIST_DIR := $(BUILD_DIR)/dist
 JAR_DIR := $(BUILD_DIR)/jar
 BPATH := $(JAR_DIR)/$(PKG)
 empty :=
@@ -44,20 +44,19 @@ git-commit-check:
 .PHONY: dist
 dist: jar | git-commit-check
 	@[ -d $(DIST_DIR)/$(PRGM) ] || mkdir -p $(DIST_DIR)/$(PRGM)
-	cp $(PRGM)-$(VERSION).jar $(LIB_DIR)/*.jar $(DIST_DIR)/$(PRGM)/
+	cp $(ROOT_DIR)/$(PRGM).jar $(LIB_DIR)/*.jar $(DIST_DIR)/$(PRGM)/
 	cp $(PRGM).sh $(DIST_DIR)/$(PRGM)/
 	cp $(PRGM).conf.sample $(DIST_DIR)/$(PRGM)/
 	cd $(DIST_DIR)/ && tar -cf $(PRGM)-$(VERSION).tar $(PRGM)/
 	cd $(DIST_DIR)/ && bzip2 -f $(PRGM)-$(VERSION).tar
-	mv $(DIST_DIR)/$(PRGM)-$(VERSION).tar.bz2 $(ROOT_DIR)
-	rm -rv $(DIST_DIR)
 
 
 .PHONY: jar
-jar: $(ROOT_DIR)/$(PRGM)-$(VERSION).jar
+jar: $(BUILD_DIR)/$(PRGM)-$(VERSION).jar
+	ln -sf $< $(ROOT_DIR)/$(PRGM).jar
 
 
-$(ROOT_DIR)/$(PRGM)-$(VERSION).jar: $(objects) $(res) $(JAR_DIR)
+$(BUILD_DIR)/$(PRGM)-$(VERSION).jar: $(objects) $(res) $(JAR_DIR)
 	jar -cf $@ -C $(JAR_DIR) .
 
 
@@ -99,7 +98,7 @@ distclean: clean
 clean:
 	@[ ! -e $(BUILD_DIR) ] || rm -rv $(BUILD_DIR)
 	@[ ! -e $(DIST_DIR) ] || rm -rv $(DIST_DIR)
-	@rm -v $(PRGM)-*.jar 2>/dev/null || true
+	@rm -v $(PRGM).jar 2>/dev/null || true
 
 
 $(LIB_DIR):
