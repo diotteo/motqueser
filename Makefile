@@ -54,10 +54,10 @@ dist: jar | git-commit-check
 
 
 .PHONY: jar
-jar: $(PRGM)-$(VERSION).jar
+jar: $(ROOT_DIR)/$(PRGM)-$(VERSION).jar
 
 
-$(PRGM)-$(VERSION).jar: $(objects) $(res) $(JAR_DIR)
+$(ROOT_DIR)/$(PRGM)-$(VERSION).jar: $(objects) $(res) $(JAR_DIR)
 	jar -cf $@ -C $(JAR_DIR) .
 
 
@@ -107,7 +107,7 @@ $(LIB_DIR):
 
 
 .PHONY: libjars
-libjars: libs $(libs)
+libjars: $(LIB_DIR) $(libs)
 
 
 $(libs) $(test_libs):
