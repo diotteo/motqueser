@@ -26,6 +26,8 @@ import ca.dioo.java.libmotqueser.NotificationMessage;
 import ca.dioo.java.libmotqueser.MalformedMessageException;
 
 class NotificationThread extends Thread {
+	private static int notificationPort = -1;
+
 	private BufferedOutputStream os;
 	private PrintWriter wtr;
 
@@ -55,12 +57,19 @@ class NotificationThread extends Thread {
 	}
 
 
+	public static int getPort() {
+		return notificationPort;
+	}
+
+
 	public NotificationThread(int port) {
 		try {
 			mServSock = new ServerSocket(port);
 		} catch (IOException e) {
 			throw new Error("Error opening ServerSocket: " + e.getMessage(), e);
 		}
+		NotificationThread.notificationPort = mServSock.getLocalPort();
+
 		mSockQueue = new ConcurrentLinkedQueue<SocketWrapper>();
 		mIql = new ItemQueueListener();
 		ItemQueue.setQueueChangeListener(mIql);

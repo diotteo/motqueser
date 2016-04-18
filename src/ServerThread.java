@@ -151,6 +151,9 @@ class ServerThread extends Thread {
 		} else if (resp instanceof ServerMessage.UnsnoozeResponse) {
 			processUnsnoozeRequest((ServerMessage.UnsnoozeResponse)resp, sm);
 
+		} else if (resp instanceof ServerMessage.ConfigResponse) {
+			processConfigRequest((ServerMessage.ConfigResponse)resp, sm);
+
 		} else {
 			throw new UnsupportedOperationException("Unimplemented response: " + resp.getClass().getName());
 		}
@@ -270,6 +273,12 @@ class ServerThread extends Thread {
 	private void processUnsnoozeRequest(ServerMessage.UnsnoozeResponse ur, ServerMessage sm) {
 		System.out.println("Unsnoozing");
 		ItemQueue.unsnooze();
+		wtr.println(sm.getXmlString());
+	}
+
+
+	private void processConfigRequest(ServerMessage.ConfigResponse cr, ServerMessage sm) {
+		cr.add("notification_port", Integer.toString(NotificationThread.getPort()));
 		wtr.println(sm.getXmlString());
 	}
 }
