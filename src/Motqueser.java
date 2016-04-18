@@ -81,7 +81,7 @@ class Motqueser {
 
 		int o;
 		while ((o = g.getopt()) != -1) {
-			char c = (char)o;
+			char c = (char) o;
 			switch (o) {
 			case 'c':
 				{
@@ -95,7 +95,7 @@ class Motqueser {
 					} else if (a.length == 1) {
 						itemId = Utils.findEventByIndex(Integer.parseInt(a[0]));
 					} else {
-						System.err.println((char)g.getOptopt() + ": invalid argument format\n");
+						System.err.println((char) g.getOptopt() + ": invalid argument format\n");
 						printHelp(1);
 					}
 
@@ -112,7 +112,7 @@ class Motqueser {
 						Utils.dbgLvl++;
 					}
 				} catch (NumberFormatException e) {
-					System.err.println((char)g.getOptopt() + ": invalid argument: must be an integer\n");
+					System.err.println((char) g.getOptopt() + ": invalid argument: must be an integer\n");
 					printHelp(1);
 				}
 				break;
@@ -143,11 +143,11 @@ class Motqueser {
 				reqType = ClientReqType.DEL_ITEM;
 				break;
 			case ':':
-				System.err.println((char)g.getOptopt() + ": argument required\n");
+				System.err.println((char) g.getOptopt() + ": argument required\n");
 				printHelp(1);
 				break;
 			case '?':
-				System.err.println((char)g.getOptopt() + ": invalid option\n");
+				System.err.println((char) g.getOptopt() + ": invalid option\n");
 				printHelp(1);
 				break;
 			default:
@@ -172,8 +172,6 @@ class Motqueser {
 	}
 
 
-	//FIXME: have server verify that it sees the file
-	//FIXME: implement sessions, allowing control and client messages from everywhere
 	private static void executeAsClient() {
 		Message msg;
 		String host;

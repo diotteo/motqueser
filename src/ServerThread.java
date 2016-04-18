@@ -54,7 +54,7 @@ class ServerThread extends Thread {
 				Message m = MessageFactory.parse(XmlFactory.newXmlParser(rdr));
 
 				if (m instanceof ClientMessage) {
-					processClientMessage((ClientMessage)m);
+					processClientMessage((ClientMessage) m);
 
 				} else if (m instanceof ControlMessage) {
 					if (!sock.getInetAddress().getHostAddress().equals("127.0.0.1")) {
@@ -65,7 +65,7 @@ class ServerThread extends Thread {
 
 					} else {
 						System.out.println("control connection detected");
-						processControlMessage((ControlMessage)m);
+						processControlMessage((ControlMessage) m);
 					}
 				} else {
 					System.err.println("Bogus message type received, closing connection: Message is a " + m.getClass().getName());
@@ -134,25 +134,25 @@ class ServerThread extends Thread {
 		ServerMessage.Response resp = sm.getResponse();
 
 		if (resp instanceof ServerMessage.ItemListResponse) {
-			processItemListRequest((ServerMessage.ItemListResponse)resp, sm);
+			processItemListRequest((ServerMessage.ItemListResponse) resp, sm);
 
 		} else if (resp instanceof ServerMessage.ItemResponse) {
-			processItemRequest((ServerMessage.ItemResponse)resp, sm);
+			processItemRequest((ServerMessage.ItemResponse) resp, sm);
 
 		} else if (resp instanceof ServerMessage.ItemDeletionResponse) {
-			processItemDeletionRequest((ServerMessage.ItemDeletionResponse)resp, sm);
+			processItemDeletionRequest((ServerMessage.ItemDeletionResponse) resp, sm);
 
 		} else if (resp instanceof ServerMessage.ItemPreservationResponse) {
-			processItemPreservationRequest((ServerMessage.ItemPreservationResponse)resp, sm);
+			processItemPreservationRequest((ServerMessage.ItemPreservationResponse) resp, sm);
 
 		} else if (resp instanceof ServerMessage.SnoozeResponse) {
-			processSnoozeRequest((ServerMessage.SnoozeResponse)resp, sm);
+			processSnoozeRequest((ServerMessage.SnoozeResponse) resp, sm);
 
 		} else if (resp instanceof ServerMessage.UnsnoozeResponse) {
-			processUnsnoozeRequest((ServerMessage.UnsnoozeResponse)resp, sm);
+			processUnsnoozeRequest((ServerMessage.UnsnoozeResponse) resp, sm);
 
 		} else if (resp instanceof ServerMessage.ConfigResponse) {
-			processConfigRequest((ServerMessage.ConfigResponse)resp, sm);
+			processConfigRequest((ServerMessage.ConfigResponse) resp, sm);
 
 		} else {
 			throw new UnsupportedOperationException("Unimplemented response: " + resp.getClass().getName());
@@ -204,7 +204,7 @@ class ServerThread extends Thread {
 			if (mediaFile.length() > Integer.MAX_VALUE) {
 				throw new UnsupportedOperationException("File " + mediaPath.toString() + " is WAY too large");
 			} else {
-				int fileLen = (int)mediaFile.length();
+				int fileLen = (int) mediaFile.length();
 				byte[] fileContent = new byte[fileLen];
 				Utils.debugPrintln(3, "file \"" + mediaPath.toString() + "\" is " + fileLen + " bytes long");
 				int len = (new FileInputStream(mediaFile)).read(fileContent);

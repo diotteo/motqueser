@@ -52,7 +52,7 @@ class Item {
 		if (size > Integer.MAX_VALUE || size < 1) {
 			throw new IOException("wrong image file size");
 		}
-		return (int)size;
+		return (int) size;
 	}
 
 	public int getVidSize() throws IOException {
@@ -61,7 +61,7 @@ class Item {
 		if (size > Integer.MAX_VALUE || size < 1) {
 			throw new IOException("wrong video file size");
 		}
-		return (int)size;
+		return (int) size;
 	}
 
 	public String getVidLen() {
