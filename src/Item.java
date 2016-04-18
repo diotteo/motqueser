@@ -84,7 +84,6 @@ class Item {
 		return timestamp;
 	}
 
-
 	public String getEventId() {
 		String id = idx + "-";
 		Calendar cl = new GregorianCalendar();

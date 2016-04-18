@@ -166,7 +166,7 @@ class ServerThread extends Thread {
 		if (ib != null) {
 			for (ItemQueue.ItemWithId it: ib) {
 				try {
-					il.add(new ServerMessage.Item(it.getId(), it.getImgSize(), it.getVidSize(), it.getVidLen()));
+					il.add(new ServerMessage.Item(it.getId(), it.getEventId(), it.getImgSize(), it.getVidSize(), it.getVidLen()));
 				} catch (IOException e) {
 					throw new Error("problem determining media size", e);
 				}

@@ -86,7 +86,7 @@ class NotificationThread extends Thread {
 				NotificationMessage nm = new NotificationMessage();
 				try {
 					nm.setItem(new NotificationMessage.NewItem(
-							new BaseServerMessage.Item(it.getId(), it.getImgSize(), it.getVidSize(), it.getVidLen())));
+							new BaseServerMessage.Item(it.getId(), it.getEventId(), it.getImgSize(), it.getVidSize(), it.getVidLen())));
 				} catch (IOException e) {
 					throw new Error("problem determining media size", e);
 				}
