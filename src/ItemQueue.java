@@ -157,13 +157,19 @@ class ItemQueue {
 	}
 
 
-	public static synchronized boolean add(Item item) throws IOException {
+	/**
+	 * @return The ID of the ItemWithId if item was added, -1 otherwise
+	 */
+	public static synchronized int add(Item item) throws IOException {
 		return add(item, (new GregorianCalendar()).getTimeInMillis());
 	}
 
 
-	public static synchronized boolean add(Item item, long timestamp) throws IOException {
-		boolean ret = false;
+	/**
+	 * @return The ID of the ItemWithId if item was added, -1 otherwise
+	 */
+	public static synchronized int add(Item item, long timestamp) throws IOException {
+		int itemId = -1;
 		long curTs = timestamp;
 		String eventId = item.getEventId();
 		ItemWrapper iw_im = indexMap.get(eventId);
@@ -171,7 +177,7 @@ class ItemQueue {
 		Utils.debugPrintln(4, "cur:" + curTs + " snooze:" + snoozeUntilTs);
 		if (isSnoozed(curTs)) {
 			Utils.debugPrintln(4, "snoozed");
-			return false;
+			return -1;
 		} else if (iw_im != null) {
 			if (iw_im.isHidden()) {
 				throw new IllegalArgumentException(eventId + " previously added");
@@ -189,9 +195,9 @@ class ItemQueue {
 				mQcListnr.onNewItem(iw);
 			}
 
-			ret = true;
+			itemId = iw.getId();
 		}
-		return ret;
+		return itemId;
 	}
 
 
