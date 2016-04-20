@@ -107,7 +107,8 @@ class ServerThread extends Thread {
 					//FIXME: delete media? maybe add a configuration parameter to control this?
 					Utils.deleteByItem(it);
 				} else {
-					ItemQueue.add(it);
+					int itemId = ItemQueue.add(it);
+					sb.insert(0, "ItemId:" + itemId + " ");
 				}
 			}
 			System.out.println(sb.toString());
