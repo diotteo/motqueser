@@ -135,7 +135,10 @@ Utils.debugPrintln(3, "Dropping problematic connection");
 	public void run() {
 		try {
 			END: while (true) {
-				mSockQueue.add(new SocketWrapper(mServSock.accept()));
+				Socket sock = mServSock.accept();
+				Utils.debugPrintln(3, getClass.getSimpleName() + ": adding socket from "
+						+ sock.getRemoteSocketAddress().getAddress().getHostAddress());
+				mSockQueue.add(new SocketWrapper(sock));
 			}
 		} catch (IOException e) {
 			System.err.println(ca.dioo.java.commons.Utils.getPrettyStackTrace(e));
