@@ -41,7 +41,7 @@ class ServerThread extends Thread {
 			wtr = new PrintWriter(os, true);
 			rdr = new BufferedReader(new InputStreamReader(is));
 		} catch (IOException e) {
-			throw new Error("Error creating " + this.getClass().getName(), e);
+			throw new Error("Error creating " + getClass().getName(), e);
 		}
 	}
 

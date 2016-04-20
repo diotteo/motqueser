@@ -101,7 +101,7 @@ class NotificationThread extends Thread {
 Utils.debugPrintln(3, "Dropping problematic connection");
 						i.remove();
 					} catch (IOException e) {
-						throw new Error("Error manipulating output stream in " + this.getClass().getName() + ": " + e.getMessage(), e);
+						throw new Error("Error manipulating output stream in " + getClass().getName() + ": " + e.getMessage(), e);
 					}
 				}
 			}
@@ -124,7 +124,7 @@ Utils.debugPrintln(3, "Dropping problematic connection");
 Utils.debugPrintln(3, "Dropping problematic connection");
 						i.remove();
 					} catch (IOException e) {
-						throw new Error("Error manipulating output stream in " + this.getClass().getName() + ": " + e.getMessage(), e);
+						throw new Error("Error manipulating output stream in " + getClass().getName() + ": " + e.getMessage(), e);
 					}
 				}
 			}
