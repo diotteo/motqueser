@@ -136,8 +136,8 @@ Utils.debugPrintln(3, "Dropping problematic connection");
 		try {
 			END: while (true) {
 				Socket sock = mServSock.accept();
-				Utils.debugPrintln(3, getClass.getSimpleName() + ": adding socket from "
-						+ sock.getRemoteSocketAddress().getAddress().getHostAddress());
+				Utils.debugPrintln(3, getClass().getSimpleName() + ": adding socket from "
+						+ sock.getInetAddress().getHostAddress());
 				mSockQueue.add(new SocketWrapper(sock));
 			}
 		} catch (IOException e) {
