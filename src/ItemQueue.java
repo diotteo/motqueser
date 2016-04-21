@@ -270,7 +270,9 @@ class ItemQueue {
 				}
 				i.remove();
 				indexMap.remove(itwpr.getEventId());
-				queueForScript(itwpr);
+				if (!itwpr.isHidden()) {
+					queueForScript(itwpr);
+				}
 				if (mQcListnr != null && !itwpr.isHidden()) {
 					mQcListnr.onItemRemoved(itwpr.getId());
 				}
