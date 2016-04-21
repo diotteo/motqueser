@@ -97,18 +97,19 @@ class ServerThread extends Thread {
 			StringBuffer sb = new StringBuffer();
 			sb.append("Control Message:");
 			for (ControlMessage.Item cmit: cm) {
-				sb.append(" Item: " + cmit.getId());
+				String s = "Item: " + cmit.getId();
 
 				Item it = Utils.getItemFromString(cmit.getId());
 
 				if (ItemQueue.isSnoozed()) {
-					Utils.debugPrintln(1, "Snoozed, deleting media files for " + cmit.getId());
+					System.out.println("Server snoozed, deleting media files for " + cmit.getId());
 
 					//FIXME: delete media? maybe add a configuration parameter to control this?
 					Utils.deleteByItem(it);
 				} else {
 					int itemId = ItemQueue.add(it);
-					sb.insert(0, "ItemId:" + itemId + " ");
+					s = "ItemId:" + itemId + " " + s;
+					sb.append("\n  " + s);
 				}
 			}
 			System.out.println(sb.toString());
