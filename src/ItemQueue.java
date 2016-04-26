@@ -147,8 +147,15 @@ class ItemQueue {
 	/**
 	 * @return remaining snooze interval in seconds
 	 */
-	public static synchronized long getSnoozeInterval() {
-		return (snoozeUntilMts - System.currentTimeMillis()) / 1000;
+	public static synchronized int getSnoozeInterval() {
+		long ts = (snoozeUntilMts - System.currentTimeMillis()) / 1000;
+		if (ts > Integer.MAX_VALUE) {
+			ts = Integer.MAX_VALUE;
+		} else if (ts < 0) {
+			ts = 0;
+		}
+
+		return (int) ts;
 	}
 
 

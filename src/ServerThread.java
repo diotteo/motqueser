@@ -268,6 +268,8 @@ class ServerThread extends Thread {
 
 		System.out.println("Snoozing for " + (interval / 60) + " minutes");
 		ItemQueue.snoozeFor(interval);
+		sr.setSnoozeInterval(ItemQueue.getSnoozeInterval());
+
 		wtr.println(sm.getXmlString());
 	}
 
