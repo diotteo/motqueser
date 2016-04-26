@@ -13,7 +13,9 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.PrintWriter;
 import java.io.PushbackInputStream;
+import java.util.Iterator;
 
+import ca.dioo.java.libmotqueser.Attribute;
 import ca.dioo.java.libmotqueser.XmlFactory;
 import ca.dioo.java.libmotqueser.MessageFactory;
 import ca.dioo.java.libmotqueser.Message;
@@ -282,7 +284,20 @@ class ServerThread extends Thread {
 
 
 	private void processConfigRequest(ServerMessage.ConfigResponse cr, ServerMessage sm) {
-		cr.add("notification_port", Integer.toString(NotificationThread.getPort()));
+		for (Iterator<Attribute<String, String>> i = cr.iterator(); i.hasNext(); ) {
+			Attribute<String, String> attr = i.next();
+
+			switch (attr.getName()) {
+			case "notification_port":
+				attr.setValue(Integer.toString(NotificationThread.getPort()));
+				break;
+			case "snooze_interval":
+				attr.setValue(Integer.toString(ItemQueue.getSnoozeInterval()));
+				break;
+			default:
+				Utils.debugPrintln(3, "Unknown configuration attribute \"" + attr.getName() + "\"");
+			}
+		}
 		wtr.println(sm.getXmlString());
 	}
 }

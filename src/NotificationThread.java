@@ -77,8 +77,7 @@ class NotificationThread extends Thread {
 
 
 	public class ItemQueueListener implements ItemQueue.OnQueueChangeListener {
-		ItemQueueListener() {
-		}
+		ItemQueueListener() {}
 
 		public void onNewItem(ItemQueue.ItemWithId it) {
 			for (Iterator<SocketWrapper> i = mSockQueue.iterator(); i.hasNext(); ) {
@@ -91,19 +90,7 @@ class NotificationThread extends Thread {
 					throw new Error("problem determining media size", e);
 				}
 
-				synchronized (sock) {
-					try {
-						PrintWriter wtr = sock.getWriter();
-						wtr.println(nm.getXmlString());
-						wtr.flush();
-						sock.getOutputStream().flush();
-					} catch (SocketException e) {
-Utils.debugPrintln(3, "Dropping problematic connection");
-						i.remove();
-					} catch (IOException e) {
-						throw new Error("Error manipulating output stream in " + getClass().getName() + ": " + e.getMessage(), e);
-					}
-				}
+				writeNotificationToSocket(sock, i, nm);
 			}
 		}
 
@@ -114,18 +101,33 @@ Utils.debugPrintln(3, "Dropping problematic connection");
 				NotificationMessage nm = new NotificationMessage();
 				nm.setItem(new NotificationMessage.RemovedItem(itemId));
 
-				synchronized (sock) {
-					try {
-						PrintWriter wtr = sock.getWriter();
-						wtr.println(nm.getXmlString());
-						wtr.flush();
-						sock.getOutputStream().flush();
-					} catch (SocketException e) {
-Utils.debugPrintln(3, "Dropping problematic connection");
-						i.remove();
-					} catch (IOException e) {
-						throw new Error("Error manipulating output stream in " + getClass().getName() + ": " + e.getMessage(), e);
-					}
+				writeNotificationToSocket(sock, i, nm);
+			}
+		}
+
+
+		public void onSnoozeChange(int interval) {
+			for (Iterator<SocketWrapper> i = mSockQueue.iterator(); i.hasNext(); ) {
+				SocketWrapper sock = i.next();
+				NotificationMessage nm = new NotificationMessage();
+				nm.setItem(new NotificationMessage.SnoozeChange(interval));
+
+				writeNotificationToSocket(sock, i, nm);
+			}
+		}
+
+		private void writeNotificationToSocket(SocketWrapper sock, Iterator<SocketWrapper> i, NotificationMessage nm) {
+			synchronized (sock) {
+				try {
+					PrintWriter wtr = sock.getWriter();
+					wtr.println(nm.getXmlString());
+					wtr.flush();
+					sock.getOutputStream().flush();
+				} catch (SocketException e) {
+					Utils.debugPrintln(3, "Dropping problematic connection");
+					i.remove();
+				} catch (IOException e) {
+					throw new Error("Error manipulating output stream in " + getClass().getName() + ": " + e.getMessage(), e);
 				}
 			}
 		}

@@ -18,13 +18,14 @@ class ItemQueue {
 	private static Map<String, ItemWrapper> indexMap = new Hashtable<String, ItemWrapper>();
 	private static int minId = 0;
 	private static int nextId = 0;
-	private static long snoozeUntilMts = -1;
+	private static long snoozeUntilMts = 0;
 	private static OnQueueChangeListener mQcListnr = null;
 
 
 	public interface OnQueueChangeListener {
 		public void onNewItem(ItemWithId it);
 		public void onItemRemoved(int itemId);
+		public void onSnoozeChange(int interval);
 	}
 
 
@@ -109,6 +110,7 @@ class ItemQueue {
 			snoozeUntilMts = mts;
 			Utils.debugPrintln(4, "Snoozing until " + mts);
 			wasExtended = true;
+			mQcListnr.onSnoozeChange(getSnoozeInterval());
 		}
 
 		return wasExtended;
@@ -127,7 +129,10 @@ class ItemQueue {
 
 
 	public static synchronized void unsnooze() {
-		snoozeUntilMts = -1;
+		if (snoozeUntilMts > 0) {
+			mQcListnr.onSnoozeChange(0);
+			snoozeUntilMts = 0;
+		}
 	}
 
 
