@@ -18,7 +18,7 @@ class ItemQueue {
 	private static Map<String, ItemWrapper> indexMap = new Hashtable<String, ItemWrapper>();
 	private static int minId = 0;
 	private static int nextId = 0;
-	private static long snoozeUntilTs = -1;
+	private static long snoozeUntilMts = -1;
 	private static OnQueueChangeListener mQcListnr = null;
 
 
@@ -99,12 +99,15 @@ class ItemQueue {
 	}
 
 
-	public static synchronized boolean snoozeUntil(long ts) {
+	/**
+	 * @param mts timestamp in milliseconds
+	 */
+	public static synchronized boolean snoozeUntil(long mts) {
 		boolean wasExtended = false;
 
-		if (snoozeUntilTs < ts) {
-			snoozeUntilTs = ts;
-			Utils.debugPrintln(4, "Snoozing until " + ts);
+		if (snoozeUntilMts < mts) {
+			snoozeUntilMts = mts;
+			Utils.debugPrintln(4, "Snoozing until " + mts);
 			wasExtended = true;
 		}
 
@@ -119,23 +122,33 @@ class ItemQueue {
 
 		GregorianCalendar cl = new GregorianCalendar();
 		cl.add(Calendar.SECOND, seconds);
-		snoozeUntil(cl.getTimeInMillis());
-		return true;
+		return snoozeUntil(cl.getTimeInMillis());
 	}
 
 
 	public static synchronized void unsnooze() {
-		snoozeUntilTs = -1;
+		snoozeUntilMts = -1;
 	}
 
 
 	public static boolean isSnoozed() {
-		return isSnoozed((new GregorianCalendar()).getTimeInMillis());
+		return isSnoozed(System.currentTimeMillis());
 	}
 
 
-	public static synchronized boolean isSnoozed(long timestamp) {
-		return (timestamp <= snoozeUntilTs);
+	/**
+	 * @param mts: timestamp in milliseconds
+	 */
+	public static synchronized boolean isSnoozed(long mts) {
+		return (mts <= snoozeUntilMts);
+	}
+
+
+	/**
+	 * @return remaining snooze interval in seconds
+	 */
+	public static synchronized long getSnoozeInterval() {
+		return (snoozeUntilMts - System.currentTimeMillis()) / 1000;
 	}
 
 
@@ -161,21 +174,22 @@ class ItemQueue {
 	 * @return The ID of the ItemWithId if item was added, -1 otherwise
 	 */
 	public static synchronized int add(Item item) throws IOException {
-		return add(item, (new GregorianCalendar()).getTimeInMillis());
+		return add(item, System.currentTimeMillis());
 	}
 
 
 	/**
+	 * @param mts timestamp in millis
 	 * @return The ID of the ItemWithId if item was added, -1 otherwise
 	 */
-	public static synchronized int add(Item item, long timestamp) throws IOException {
+	public static synchronized int add(Item item, long mts) throws IOException {
 		int itemId = -1;
-		long curTs = timestamp;
+		long curMts = mts;
 		String eventId = item.getEventId();
 		ItemWrapper iw_im = indexMap.get(eventId);
 
-		Utils.debugPrintln(4, "cur:" + curTs + " snooze:" + snoozeUntilTs);
-		if (isSnoozed(curTs)) {
+		Utils.debugPrintln(4, "cur:" + curMts + " snooze:" + snoozeUntilMts);
+		if (isSnoozed(curMts)) {
 			Utils.debugPrintln(4, "snoozed");
 			return -1;
 		} else if (iw_im != null) {
