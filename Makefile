@@ -49,6 +49,7 @@ dist: jar | git-commit-check
 	cp $(PRGM).conf.sample $(DIST_DIR)/$(PRGM)/
 	cd $(DIST_DIR)/ && tar -cf $(PRGM)-$(VERSION).tar $(PRGM)/
 	cd $(DIST_DIR)/ && bzip2 -f $(PRGM)-$(VERSION).tar
+	cd $(DIST_DIR)/ && ln -sf $(PRGM)-$(VERSION).tar.bz2 $(PRGM).tar.bz2
 
 
 .PHONY: jar
