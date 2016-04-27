@@ -104,7 +104,7 @@ class ServerThread extends Thread {
 				Item it = Utils.getItemFromString(cmit.getId());
 
 				if (ItemQueue.isSnoozed()) {
-					System.out.println("Server snoozed, deleting media files for " + cmit.getId());
+					sb.append("Server snoozed, deleting media files for " + s);
 
 					//FIXME: delete media? maybe add a configuration parameter to control this?
 					Utils.deleteByItem(it);

@@ -18,7 +18,6 @@ import ca.dioo.java.libmotqueser.XmlFactory;
 import ca.dioo.java.libmotqueser.MessageFactory;
 import ca.dioo.java.libmotqueser.Message;
 import ca.dioo.java.libmotqueser.ClientMessage;
-import ca.dioo.java.libmotqueser.ControlMessage;
 import ca.dioo.java.libmotqueser.ErrorMessage;
 import ca.dioo.java.libmotqueser.BaseServerMessage;
 import ca.dioo.java.libmotqueser.ServerMessage;
