@@ -1,12 +1,17 @@
 Compiling:
 
--Get monitor-lib.jar
--make all
+-Get libmotqueser.jar, dioo-commons.jar, java-getopt.jar
+-make dist -j
+-Unpack the tarball in build/dist/ where you want or run motqueser.sh directly
+from the dev environment
 
 Running:
 
--rename dir.conf.sample to dir.conf and write the path to your directory as the first line
--make run ARGS='--help'
+-rename motqueser.conf.sample to motqueser.conf and configure your
+installation as per the instructions
+
+-Run the server: ./motqueser.sh [args...]
+-For help: ./motqueser.sh --help
 
 In another terminal, run the client to add messages:
--make run ARGS='-p {server-port} -c {client-message}'
+-./motqueser.sh -c {ID of the motion event to send into the queue}
